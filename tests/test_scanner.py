@@ -33,7 +33,8 @@ single_tokens: list[tuple[str, TokenType, Any, int]] = [
     ("<=", TokenType.LESS_EQUAL, None, 1),
     ("<", TokenType.LESS, None, 1),
     (">=", TokenType.GREATER_EQUAL, None, 1),
-    (">", TokenType.GREATER, None, 1)
+    (">", TokenType.GREATER, None, 1),
+    ("/", TokenType.SLASH, None, 1)
 ]
 
 @pytest.mark.parametrize("source, token_type, literal, line", single_tokens)
@@ -53,3 +54,17 @@ def test_single_token(
     assert token.lexeme == source
     assert token.literal == literal
     assert token.line == line
+
+def test_comment_to_end() -> None:
+    tokens = Scanner("+//").scanTokens()
+    assert len(tokens) == 2
+    assert tokens[0].token_type == TokenType.PLUS
+    assert tokens[1].token_type == TokenType.EOF
+
+
+def test_comment_to_newline() -> None:
+    tokens = Scanner("+// aaa\n-").scanTokens()
+    assert len(tokens) == 3
+    assert tokens[0].token_type == TokenType.PLUS
+    assert tokens[1].token_type == TokenType.MINUS
+    assert tokens[2].token_type == TokenType.EOF

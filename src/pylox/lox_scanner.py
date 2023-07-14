@@ -51,6 +51,13 @@ class Scanner:
             self.__addToken(TokenType.LESS_EQUAL if self.__match("=") else TokenType.LESS)
         elif c == ">":
             self.__addToken(TokenType.GREATER_EQUAL if self.__match("=") else TokenType.GREATER)
+        elif c == "/":
+            if (self.__match("/")):
+                # A comment goes until the end of the line.
+                while (self.__peek() != "\n" and not self.__isAtEnd()):
+                    self.__advance()
+            else:
+                self.__addToken(TokenType.SLASH)
         else:
             LoxError.error(self.__line, "Unexpected character.")
 
@@ -62,6 +69,9 @@ class Scanner:
     
         self.__current += 1
         return True
+    
+    def __peek(self) -> str:
+        return "\0" if self.__isAtEnd() else self.__source[self.__current]
     
     def __isAtEnd(self) -> bool:
         return self.__current >= len(self.__source)
