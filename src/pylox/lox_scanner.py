@@ -58,6 +58,11 @@ class Scanner:
                     self.__advance()
             else:
                 self.__addToken(TokenType.SLASH)
+        elif c in " \r\t":
+            # Ignore whitespaces.
+            pass
+        elif c == "\n":
+            self.__line += 1
         else:
             LoxError.error(self.__line, "Unexpected character.")
 
