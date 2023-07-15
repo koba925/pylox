@@ -8,5 +8,8 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
+    "python.analysis.extraPaths": [
+        "./src/pylox"
+    ],
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
 }
