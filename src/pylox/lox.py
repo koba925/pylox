@@ -20,6 +20,7 @@ class Lox:
         with open(path) as f:
             Lox.__run(f.read())
 
+        # Indicate an error in the exit code.
         if LoxError.had_error:
             exit(65)
 
