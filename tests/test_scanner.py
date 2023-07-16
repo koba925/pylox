@@ -44,7 +44,9 @@ single_tokens: list[tuple[str, TokenType, Any, int]] = [
     ("<", TokenType.LESS, None, 1),
     (">=", TokenType.GREATER_EQUAL, None, 1),
     (">", TokenType.GREATER, None, 1),
-    ("/", TokenType.SLASH, None, 1)
+    ("/", TokenType.SLASH, None, 1),
+    ("\"abc\"", TokenType.STRING, "abc", 1),
+    ("\"ab\nc\"", TokenType.STRING, "ab\nc", 2)
 ]
 
 @pytest.mark.parametrize("source, token_type, literal, line", single_tokens)
@@ -96,4 +98,6 @@ def test_whitespaces() -> None:
     assert tokens[4].line == 2
     assert tokens[5].token_type == TokenType.EOF
 
-
+def test_unterminated_string() -> None:
+    tokens = Scanner("\"abc").scanTokens()
+    assert LoxError.had_error == True
