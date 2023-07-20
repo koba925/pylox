@@ -1,51 +1,22 @@
-from enum import Enum, auto
+from enum import Enum
 
-
-class TokenType(Enum):
+TokenType = Enum("TokenType", [
     # Single-character tokens.
-    LEFT_PAREN = auto()
-    RIGHT_PAREN = auto()
-    LEFT_BRACE = auto()
-    RIGHT_BRACE = auto()
-    COMMA = auto()
-    DOT = auto()
-    MINUS = auto()
-    PLUS = auto()
-    SEMICOLON = auto()
-    SLASH = auto()
-    STAR = auto()
+    "LEFT_PAREN", "RIGHT_PAREN", "LEFT_BRACE", "RIGHT_BRACE",
+    "COMMA", "DOT", "MINUS", "PLUS", "SEMICOLON", "SLASH", "STAR",
 
     # One or two character tokens.
-    BANG = auto()
-    BANG_EQUAL = auto()
-    EQUAL = auto()
-    EQUAL_EQUAL = auto()
-    GREATER = auto()
-    GREATER_EQUAL = auto()
-    LESS = auto()
-    LESS_EQUAL = auto()
+    "BANG", "BANG_EQUAL",
+    "EQUAL", "EQUAL_EQUAL",
+    "GREATER", "GREATER_EQUAL",
+    "LESS", "LESS_EQUAL",
 
     # Literals.
-    IDENTIFIER = auto()
-    STRING = auto()
-    NUMBER = auto()
+    "IDENTIFIER", "STRING", "NUMBER",
 
     # Keywords.
-    AND = auto()
-    CLASS = auto()
-    ELSE = auto()
-    FALSE = auto()
-    FUN = auto()
-    FOR = auto()
-    IF = auto()
-    NIL = auto()
-    OR = auto()
-    PRINT = auto()
-    RETURN = auto()
-    SUPER = auto()
-    THIS = auto()
-    TRUE = auto()
-    VAR = auto()
-    WHILE = auto()
+    "AND", "CLASS", "ELSE", "FALSE", "FUN", "FOR", "IF", "NIL", "OR",
+    "PRINT", "RETURN", "SUPER", "THIS", "TRUE", "VAR", "WHILE",
 
-    EOF = auto()
+    "EOF"
+])
