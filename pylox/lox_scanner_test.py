@@ -72,7 +72,7 @@ single_tokens: list[tuple[str, TokenType, Any, int]] = [
     ("this", TokenType.THIS, None, 1),
     ("true", TokenType.TRUE, None, 1),
     ("var", TokenType.VAR, None, 1),
-    ("while", TokenType.WHILE, None, 1)
+    ("while", TokenType.WHILE, None, 1),
 ]
 
 
@@ -132,16 +132,18 @@ def test_unterminated_string() -> None:
     tokens = Scanner('"abc').scanTokens()
     assert LoxError.had_error == True
 
+
 def test_number_leading_dot() -> None:
-    tokens = Scanner('.123').scanTokens()
+    tokens = Scanner(".123").scanTokens()
     assert LoxError.had_error == False
     assert len(tokens) == 3
     assert tokens[0].token_type == TokenType.DOT
     assert tokens[1].token_type == TokenType.NUMBER
     assert tokens[2].token_type == TokenType.EOF
 
+
 def test_number_trailing_dot() -> None:
-    tokens = Scanner('123.').scanTokens()
+    tokens = Scanner("123.").scanTokens()
     assert LoxError.had_error == False
     assert len(tokens) == 3
     assert tokens[0].token_type == TokenType.NUMBER

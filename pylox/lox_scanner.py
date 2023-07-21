@@ -105,8 +105,7 @@ class Scanner:
 
         text = self.__source[self.__start : self.__current]
         self.__add_token(
-            self.__KEYWORDS[text] if text in self.__KEYWORDS else 
-            TokenType.IDENTIFIER
+            self.__KEYWORDS[text] if text in self.__KEYWORDS else TokenType.IDENTIFIER
         )
 
     def __number(self) -> None:

@@ -45,5 +45,6 @@ class Lox:
         else:
             Lox.__run_prompt()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     Lox.main(sys.argv)
