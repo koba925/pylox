@@ -5,9 +5,6 @@
     "python.formatting.provider": "none",
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.analysis.extraPaths": [
-        "./src/pylox"
-    ],
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
     "python.linting.mypyArgs": [
         "--show-column-numbers",
