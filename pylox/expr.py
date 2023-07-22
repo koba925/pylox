@@ -6,6 +6,7 @@ from lox_token import Token
 
 R = TypeVar("R")
 
+
 class Visitor(ABC, Generic[R]):
     @abstractmethod
     def visitBinaryExpr(self, expr: "Binary") -> R:
@@ -23,6 +24,7 @@ class Visitor(ABC, Generic[R]):
     def visitUnaryExpr(self, expr: "Unary") -> R:
         raise NotImplementedError()
 
+
 class Expr:
     @abstractmethod
     def accept(self, visitor: Visitor[R]) -> R:
@@ -35,8 +37,9 @@ class Binary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: "Visitor[R]") -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visitBinaryExpr(self)
+
 
 @dataclass
 class Grouping(Expr):
@@ -45,17 +48,19 @@ class Grouping(Expr):
     def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visitGroupingExpr(self)
 
+
 @dataclass
 class Literal(Expr):
     value: Any
 
-    def accept(self, visitor: "Visitor[R]") -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visitLiteralExpr(self)
+
 
 @dataclass
 class Unary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: "Visitor[R]") -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visitUnaryExpr(self)
