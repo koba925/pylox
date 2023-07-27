@@ -1,7 +1,7 @@
 from typing import Any
 
 from lox_error import LoxError
-from lox_token import TokenType, Token
+from lox_token import Token, TokenType
 
 
 class Scanner:
@@ -97,7 +97,7 @@ class Scanner:
         elif self.__is_alpha(c):
             self.__identifier()
         else:
-            LoxError.error(self.__line, "Unexpected character.")
+            LoxError.scan_error(self.__line, "Unexpected character.")
 
     def __identifier(self) -> None:
         while self.__is_alpha_numeric(self.__peek()):
@@ -133,7 +133,7 @@ class Scanner:
             self.__advance()
 
         if self.__is_at_end():
-            LoxError.error(self.__line, "Unterminated string.")
+            LoxError.scan_error(self.__line, "Unterminated string.")
             return
 
         # The closing ".

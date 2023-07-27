@@ -1,3 +1,6 @@
+from lox_token import Token, TokenType
+
+
 class LoxError:
     had_error: bool = False
 
@@ -7,5 +10,12 @@ class LoxError:
         LoxError.had_error = True
 
     @staticmethod
-    def error(line: int, message: str) -> None:
+    def parse_error(token: Token, message: str) -> None:
+        if token.token_type == TokenType.EOF:
+            LoxError.report(token.line, " at end", message)
+        else:
+            LoxError.report(token.line, f" at '{token.lexeme}'", message)
+
+    @staticmethod
+    def scan_error(line: int, message: str) -> None:
         LoxError.report(line, "", message)

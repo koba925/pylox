@@ -4,6 +4,8 @@ import sys
 
 from lox_error import LoxError
 from lox_scanner import Scanner
+from lox_parser import Parser
+from lox_ast_printer import AstPrinter
 
 
 class Lox:
@@ -12,9 +14,20 @@ class Lox:
         scanner = Scanner(source)
         tokens = scanner.scanTokens()
 
-        for token in tokens:
-            print(token)
+        print("Tokens:", *tokens, sep="\n")
 
+        parser = Parser(tokens)
+        expression = parser.parse()
+
+        # Stop if there was a syntax error.
+        if LoxError.had_error:
+            return
+        
+        # Check expression is not none to avoid mypy error.
+        if expression is not None:
+            print("AST:")
+            print(AstPrinter().print(expression))
+        
     @staticmethod
     def __run_file(path: str) -> None:
         with open(path) as f:
