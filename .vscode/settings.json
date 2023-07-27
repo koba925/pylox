@@ -6,7 +6,17 @@
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.completeFunctionParens": false,
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.extraPaths": [
+        "/home/takahiro/pylox/"
+    ],
+    "python.linting.mypyEnabled": true,
     "python.linting.mypyArgs": [
+        "--follow-imports=normal",
+        "--ignore-missing-imports",
         "--show-column-numbers",
         "--no-pretty",
         "--strict"
