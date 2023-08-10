@@ -15,7 +15,7 @@ def clear_error() -> Generator[None, None, None]:
 
 def test_null_source() -> None:
     tokens = Scanner("").scanTokens()
-    assert LoxError.had_error == False
+    assert LoxError.had_error is False
     assert len(tokens) == 1
     token = tokens[0]
     assert token.token_type == TokenType.EOF
@@ -25,8 +25,8 @@ def test_null_source() -> None:
 
 
 def test_unexpected_character() -> None:
-    tokens = Scanner(":").scanTokens()
-    assert LoxError.had_error == True
+    Scanner(":").scanTokens()
+    assert LoxError.had_error is True
 
 
 single_tokens: list[tuple[str, TokenType, Any, int]] = [
@@ -85,7 +85,7 @@ def test_single_token(
 ) -> None:
     print(source, token_type, literal, line, file=sys.stderr)
     scanner = Scanner(source)
-    assert LoxError.had_error == False
+    assert LoxError.had_error is False
     tokens = scanner.scanTokens()
     assert len(tokens) == 2
     assert tokens[1].token_type == TokenType.EOF
@@ -98,7 +98,7 @@ def test_single_token(
 
 def test_comment_to_end() -> None:
     tokens = Scanner("+//").scanTokens()
-    assert LoxError.had_error == False
+    assert LoxError.had_error is False
     assert len(tokens) == 2
     assert tokens[0].token_type == TokenType.PLUS
     assert tokens[1].token_type == TokenType.EOF
@@ -106,17 +106,16 @@ def test_comment_to_end() -> None:
 
 def test_comment_to_newline() -> None:
     tokens = Scanner("+// aaa\n-").scanTokens()
-    assert LoxError.had_error == False
+    assert LoxError.had_error is False
     assert len(tokens) == 3
     assert tokens[0].token_type == TokenType.PLUS
     assert tokens[1].token_type == TokenType.MINUS
     assert tokens[2].token_type == TokenType.EOF
-    assert LoxError.had_error == False
 
 
 def test_whitespaces() -> None:
     tokens = Scanner("+ -\r;\t,\n.").scanTokens()
-    assert LoxError.had_error == False
+    assert LoxError.had_error is False
     assert len(tokens) == 6
     assert tokens[0].token_type == TokenType.PLUS
     assert tokens[1].token_type == TokenType.MINUS
@@ -129,13 +128,13 @@ def test_whitespaces() -> None:
 
 
 def test_unterminated_string() -> None:
-    tokens = Scanner('"abc').scanTokens()
-    assert LoxError.had_error == True
+    Scanner('"abc').scanTokens()
+    assert LoxError.had_error is True
 
 
 def test_number_leading_dot() -> None:
     tokens = Scanner(".123").scanTokens()
-    assert LoxError.had_error == False
+    assert LoxError.had_error is False
     assert len(tokens) == 3
     assert tokens[0].token_type == TokenType.DOT
     assert tokens[1].token_type == TokenType.NUMBER
@@ -144,7 +143,7 @@ def test_number_leading_dot() -> None:
 
 def test_number_trailing_dot() -> None:
     tokens = Scanner("123.").scanTokens()
-    assert LoxError.had_error == False
+    assert LoxError.had_error is False
     assert len(tokens) == 3
     assert tokens[0].token_type == TokenType.NUMBER
     assert tokens[1].token_type == TokenType.DOT

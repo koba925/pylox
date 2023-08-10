@@ -120,8 +120,6 @@ class Scanner:
             while self.__peek().isdigit():
                 self.__advance()
 
-        a = self.__source[self.__start : self.__current - 1]
-
         self.__add_token(
             TokenType.NUMBER, float(self.__source[self.__start : self.__current])
         )

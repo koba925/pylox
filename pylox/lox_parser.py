@@ -4,11 +4,12 @@ from lox_token import Token, TokenType
 from lox_expr import Binary, Expr, Grouping, Literal, Unary
 from lox_error import LoxError
 
+
 class ParseError(Exception):
     pass
 
-class Parser:
 
+class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.__tokens = tokens
         self.__current = 0
@@ -82,34 +83,34 @@ class Parser:
             return Literal(True)
         if self.__match(TokenType.NIL):
             return Literal(None)
-        
+
         if self.__match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.__previous().literal)
-        
+
         if self.__match(TokenType.LEFT_PAREN):
             expr = self.__expression()
             self.__consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
-        
+
         raise self.__error(self.__peek(), "Expect expression.")
-    
-    def __match(self, *types: TokenType) -> bool:
-        for type in types:
-            if self.__check(type):
+
+    def __match(self, *token_types: TokenType) -> bool:
+        for tt in token_types:
+            if self.__check(tt):
                 self.__advance()
                 return True
         return False
 
-    def __consume(self, type: TokenType, message: str) -> Token:
-        if self.__check(type):
+    def __consume(self, token_type: TokenType, message: str) -> Token:
+        if self.__check(token_type):
             return self.__advance()
-        
+
         raise self.__error(self.__peek(), message)
 
-    def __check(self, type: TokenType) -> bool:
+    def __check(self, token_type: TokenType) -> bool:
         if self.__is_at_end():
             return False
-        return self.__peek().token_type == type
+        return self.__peek().token_type == token_type
 
     def __advance(self) -> Token:
         if not self.__is_at_end():
@@ -124,11 +125,11 @@ class Parser:
 
     def __previous(self) -> Token:
         return self.__tokens[self.__current - 1]
-    
+
     def __error(self, token: Token, message: str) -> ParseError:
         LoxError.parse_error(token, message)
         return ParseError()
-    
+
     def __syncronize(self) -> None:
         self.__advance()
 
@@ -143,8 +144,8 @@ class Parser:
                 TokenType.IF,
                 TokenType.WHILE,
                 TokenType.PRINT,
-                TokenType.RETURN
+                TokenType.RETURN,
             ):
                 return
-            
-            self.__advance
+
+            self.__advance()
