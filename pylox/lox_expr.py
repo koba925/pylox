@@ -7,7 +7,7 @@ from lox_token import Token
 R = TypeVar("R")
 
 
-class Visitor(ABC, Generic[R]):
+class ExprVisitor(ABC, Generic[R]):
     @abstractmethod
     def visitBinaryExpr(self, expr: "Binary") -> R:
         raise NotImplementedError()
@@ -27,7 +27,7 @@ class Visitor(ABC, Generic[R]):
 
 class Expr:
     @abstractmethod
-    def accept(self, visitor: Visitor[R]) -> R:
+    def accept(self, visitor: ExprVisitor[R]) -> R:
         raise NotImplementedError()
 
 
@@ -37,7 +37,7 @@ class Binary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: Visitor[R]) -> R:
+    def accept(self, visitor: ExprVisitor[R]) -> R:
         return visitor.visitBinaryExpr(self)
 
 
@@ -45,7 +45,7 @@ class Binary(Expr):
 class Grouping(Expr):
     expression: Expr
 
-    def accept(self, visitor: Visitor[R]) -> R:
+    def accept(self, visitor: ExprVisitor[R]) -> R:
         return visitor.visitGroupingExpr(self)
 
 
@@ -53,7 +53,7 @@ class Grouping(Expr):
 class Literal(Expr):
     value: Any
 
-    def accept(self, visitor: Visitor[R]) -> R:
+    def accept(self, visitor: ExprVisitor[R]) -> R:
         return visitor.visitLiteralExpr(self)
 
 
@@ -62,5 +62,5 @@ class Unary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: Visitor[R]) -> R:
+    def accept(self, visitor: ExprVisitor[R]) -> R:
         return visitor.visitUnaryExpr(self)

@@ -1,8 +1,7 @@
-from typing import Optional
-
 from lox_token import Token, TokenType
 from lox_expr import Binary, Expr, Grouping, Literal, Unary
 from lox_error import LoxError
+from lox_stmt import Stmt, Expression, Print
 
 
 class ParseError(Exception):
@@ -14,11 +13,27 @@ class Parser:
         self.__tokens = tokens
         self.__current = 0
 
-    def parse(self) -> Optional[Expr]:
-        try:
-            return self.__expression()
-        except ParseError:
-            return None
+    def parse(self) -> list[Stmt]:
+        statements: list[Stmt] = []
+        while not self.__is_at_end():
+            statements.append(self.__statement())
+        return statements
+
+    def __statement(self) -> Stmt:
+        if self.__match(TokenType.PRINT):
+            return self.__printStatement()
+
+        return self.__expressionStatement()
+
+    def __printStatement(self) -> Stmt:
+        value = self.__expression()
+        self.__consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Print(value)
+
+    def __expressionStatement(self) -> Stmt:
+        expr = self.__expression()
+        self.__consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return Expression(expr)
 
     def __expression(self) -> Expr:
         return self.__equality()

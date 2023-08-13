@@ -5,6 +5,7 @@ import sys
 from lox_error import LoxError
 from lox_scanner import Scanner
 from lox_parser import Parser
+from lox_ast_printer import AstPrinter
 from lox_interpreter import Interpreter
 
 # from lox_ast_printer import AstPrinter
@@ -21,20 +22,18 @@ class Lox:
         # print("Tokens:", *tokens, sep="\n")
 
         parser = Parser(tokens)
-        expression = parser.parse()
+        statements = parser.parse()
 
         # Stop if there was a syntax error.
         if LoxError.had_error:
             return
 
         # Check expression is not none to avoid mypy error.
-        # if expression is not None:
-        #     print("AST:")
-        #     print(AstPrinter().print(expression))
+        assert statements is not None
 
-        # Check expression is not none to avoid mypy error.
-        if expression is not None:
-            Lox.interpreter.interpret(expression)
+        print("AST:")
+        print(AstPrinter().print(statements))
+        Lox.interpreter.interpret(statements)
 
     @staticmethod
     def __run_file(path: str) -> None:

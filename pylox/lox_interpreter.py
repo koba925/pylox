@@ -1,6 +1,7 @@
 from typing import Any
 
-from lox_expr import Binary, Expr, Grouping, Literal, Visitor, Unary
+from lox_expr import Binary, Expr, Grouping, Literal, ExprVisitor, Unary
+from lox_stmt import StmtVisitor, Stmt, Expression, Print
 from lox_token import Token, TokenType
 from lox_error import LoxError
 from lox_runtime_error import LoxRuntimeError
@@ -8,16 +9,26 @@ from lox_runtime_error import LoxRuntimeError
 # TODO: use operator module
 
 
-class Interpreter(Visitor[Any]):
-    def interpret(self, expression: Expr) -> None:
+class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
+    def interpret(self, statements: list[Stmt]) -> None:
         try:
-            value = self.__evaluate(expression)
-            print(self.__stringify(value))
+            for statement in statements:
+                self.__execute(statement)
         except LoxRuntimeError as e:
             LoxError.runtime_error(e)
 
     def __evaluate(self, expr: Expr) -> Any:
         return expr.accept(self)
+
+    def __execute(self, stmt: Stmt) -> None:
+        stmt.accept(self)
+
+    def visitExpressionStmt(self, stmt: Expression) -> None:
+        self.__evaluate(stmt.expression)
+
+    def visitPrintStmt(self, stmt: Print) -> None:
+        value = self.__evaluate(stmt.expression)
+        print(self.__stringify(value))
 
     def visitBinaryExpr(self, expr: Binary) -> Any:
         left = self.__evaluate(expr.left)
@@ -98,7 +109,8 @@ class Interpreter(Visitor[Any]):
         return True
 
     def __is_equal(self, a: Any, b: Any) -> bool:
-        return type(a) == type(b) and a == b  # pylint: disable=C0123 # cannot check by isinstance
+        # pylint: disable=unidiomatic-typecheck # cannot check by isinstance
+        return type(a) == type(b) and a == b
 
     def __stringify(self, obj: Any) -> str:
         if obj is None:
