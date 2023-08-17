@@ -1,7 +1,10 @@
-from lox_token import Token, TokenType
-from lox_expr import Binary, Expr, Grouping, Literal, Unary
+from typing import Optional
+
 from lox_error import LoxError
-from lox_stmt import Stmt, Expression, Print
+from lox_expr import Assign, Binary, Expr, Grouping, Literal, Unary, Variable
+from lox_stmt import Expression, Print, Stmt, Var
+from lox_token import Token
+from lox_token import TokenType as TT
 
 
 class ParseError(Exception):
@@ -13,35 +16,70 @@ class Parser:
         self.__tokens = tokens
         self.__current = 0
 
-    def parse(self) -> list[Stmt]:
-        statements: list[Stmt] = []
+    def parse(self) -> list[Optional[Stmt]]:
+        statements: list[Optional[Stmt]] = []
         while not self.__is_at_end():
-            statements.append(self.__statement())
+            statements.append(self.__declaration())
         return statements
 
+    def __declaration(self) -> Optional[Stmt]:
+        try:
+            if self.__match(TT.VAR):
+                return self.__var_declaration()
+
+            return self.__statement()
+        except ParseError:
+            self.__syncronize()
+            return None
+
     def __statement(self) -> Stmt:
-        if self.__match(TokenType.PRINT):
-            return self.__printStatement()
+        if self.__match(TT.PRINT):
+            return self.__print_statement()
 
-        return self.__expressionStatement()
+        return self.__expression_statement()
 
-    def __printStatement(self) -> Stmt:
+    def __print_statement(self) -> Stmt:
         value = self.__expression()
-        self.__consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        self.__consume(TT.SEMICOLON, "Expect ';' after value.")
         return Print(value)
 
-    def __expressionStatement(self) -> Stmt:
+    def __var_declaration(self) -> Stmt:
+        name = self.__consume(TT.IDENTIFIER, "Expect variable name.")
+
+        initializer = None
+        if self.__match(TT.EQUAL):
+            initializer = self.__expression()
+
+        self.__consume(TT.SEMICOLON, "Expect ';' after variable declaration.")
+        return Var(name, initializer)
+
+    def __expression_statement(self) -> Stmt:
         expr = self.__expression()
-        self.__consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        self.__consume(TT.SEMICOLON, "Expect ';' after expression.")
         return Expression(expr)
 
     def __expression(self) -> Expr:
-        return self.__equality()
+        return self.__assignment()
+
+    def __assignment(self) -> Expr:
+        expr = self.__equality()
+
+        if self.__match(TT.EQUAL):
+            equals = self.__previous()
+            value = self.__assignment()
+
+            if isinstance(expr, Variable):
+                name = expr.name
+                return Assign(name, value)
+
+            self.__error(equals, "Invalid assignment target.")
+
+        return expr
 
     def __equality(self) -> Expr:
         expr = self.__comparison()
 
-        while self.__match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL):
+        while self.__match(TT.BANG_EQUAL, TT.EQUAL_EQUAL):
             operator = self.__previous()
             right = self.__comparison()
             expr = Binary(expr, operator, right)
@@ -52,10 +90,10 @@ class Parser:
         expr = self.__term()
 
         while self.__match(
-            TokenType.GREATER,
-            TokenType.GREATER_EQUAL,
-            TokenType.LESS,
-            TokenType.LESS_EQUAL,
+            TT.GREATER,
+            TT.GREATER_EQUAL,
+            TT.LESS,
+            TT.LESS_EQUAL,
         ):
             operator = self.__previous()
             right = self.__term()
@@ -66,7 +104,7 @@ class Parser:
     def __term(self) -> Expr:
         expr = self.__factor()
 
-        while self.__match(TokenType.MINUS, TokenType.PLUS):
+        while self.__match(TT.MINUS, TT.PLUS):
             operator = self.__previous()
             right = self.__factor()
             expr = Binary(expr, operator, right)
@@ -76,7 +114,7 @@ class Parser:
     def __factor(self) -> Expr:
         expr = self.__unary()
 
-        while self.__match(TokenType.SLASH, TokenType.STAR):
+        while self.__match(TT.SLASH, TT.STAR):
             operator = self.__previous()
             right = self.__unary()
             expr = Binary(expr, operator, right)
@@ -84,7 +122,7 @@ class Parser:
         return expr
 
     def __unary(self) -> Expr:
-        if self.__match(TokenType.BANG, TokenType.MINUS):
+        if self.__match(TT.BANG, TT.MINUS):
             operator = self.__previous()
             right = self.__unary()
             return Unary(operator, right)
@@ -92,37 +130,40 @@ class Parser:
         return self.__primary()
 
     def __primary(self) -> Expr:
-        if self.__match(TokenType.FALSE):
+        if self.__match(TT.FALSE):
             return Literal(False)
-        if self.__match(TokenType.TRUE):
+        if self.__match(TT.TRUE):
             return Literal(True)
-        if self.__match(TokenType.NIL):
+        if self.__match(TT.NIL):
             return Literal(None)
 
-        if self.__match(TokenType.NUMBER, TokenType.STRING):
+        if self.__match(TT.NUMBER, TT.STRING):
             return Literal(self.__previous().literal)
 
-        if self.__match(TokenType.LEFT_PAREN):
+        if self.__match(TT.IDENTIFIER):
+            return Variable(self.__previous())
+
+        if self.__match(TT.LEFT_PAREN):
             expr = self.__expression()
-            self.__consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
+            self.__consume(TT.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
 
         raise self.__error(self.__peek(), "Expect expression.")
 
-    def __match(self, *token_types: TokenType) -> bool:
+    def __match(self, *token_types: TT) -> bool:
         for tt in token_types:
             if self.__check(tt):
                 self.__advance()
                 return True
         return False
 
-    def __consume(self, token_type: TokenType, message: str) -> Token:
+    def __consume(self, token_type: TT, message: str) -> Token:
         if self.__check(token_type):
             return self.__advance()
 
         raise self.__error(self.__peek(), message)
 
-    def __check(self, token_type: TokenType) -> bool:
+    def __check(self, token_type: TT) -> bool:
         if self.__is_at_end():
             return False
         return self.__peek().token_type == token_type
@@ -133,7 +174,7 @@ class Parser:
         return self.__previous()
 
     def __is_at_end(self) -> bool:
-        return self.__peek().token_type == TokenType.EOF
+        return self.__peek().token_type == TT.EOF
 
     def __peek(self) -> Token:
         return self.__tokens[self.__current]
@@ -149,17 +190,17 @@ class Parser:
         self.__advance()
 
         while not self.__is_at_end():
-            if self.__previous().token_type == TokenType.SEMICOLON:
+            if self.__previous().token_type == TT.SEMICOLON:
                 return
             if self.__peek().token_type in (
-                TokenType.CLASS,
-                TokenType.FUN,
-                TokenType.VAR,
-                TokenType.FOR,
-                TokenType.IF,
-                TokenType.WHILE,
-                TokenType.PRINT,
-                TokenType.RETURN,
+                TT.CLASS,
+                TT.FUN,
+                TT.VAR,
+                TT.FOR,
+                TT.IF,
+                TT.WHILE,
+                TT.PRINT,
+                TT.RETURN,
             ):
                 return
 

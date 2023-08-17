@@ -2,11 +2,11 @@
 
 import sys
 
-from lox_error import LoxError
-from lox_scanner import Scanner
-from lox_parser import Parser
 from lox_ast_printer import AstPrinter
+from lox_error import LoxError
 from lox_interpreter import Interpreter
+from lox_parser import Parser
+from lox_scanner import Scanner
 
 # from lox_ast_printer import AstPrinter
 

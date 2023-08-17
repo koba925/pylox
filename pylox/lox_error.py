@@ -1,7 +1,8 @@
 import sys
 
-from lox_token import Token, TokenType
 from lox_runtime_error import LoxRuntimeError
+from lox_token import Token
+from lox_token import TokenType as TT
 
 
 class LoxError:
@@ -19,7 +20,7 @@ class LoxError:
 
     @staticmethod
     def parse_error(token: Token, message: str) -> None:
-        if token.token_type == TokenType.EOF:
+        if token.token_type == TT.EOF:
             LoxError.report(token.line, " at end", message)
         else:
             LoxError.report(token.line, f" at '{token.lexeme}'", message)

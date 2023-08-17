@@ -1,45 +1,69 @@
-from lox_expr import ExprVisitor, Expr, Binary, Grouping, Literal, Unary
-from lox_stmt import StmtVisitor, Stmt, Expression, Print
-from lox_token import Token, TokenType
+from lox_expr import (
+    Assign,
+    Binary,
+    Expr,
+    ExprVisitor,
+    Grouping,
+    Literal,
+    Unary,
+    Variable,
+)
+from lox_stmt import Expression, Print, Stmt, StmtVisitor, Var
+from lox_token import Token
+from lox_token import TokenType as TT
 
 
 class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
     def print(self, stmts: list[Stmt]) -> list[str]:
-        return [stmt.accept(self) for stmt in stmts]
+        return [stmt.accept(self) for stmt in stmts if stmt is not None]
 
-    def visitExpressionStmt(self, stmt: Expression) -> str:
+    def visit_expression_stmt(self, stmt: Expression) -> str:
         return self.__parenthesize("expr", stmt.expression)
 
-    def visitPrintStmt(self, stmt: Print) -> str:
+    def visit_print_stmt(self, stmt: Print) -> str:
         return self.__parenthesize("print", stmt.expression)
 
-    def visitBinaryExpr(self, expr: Binary) -> str:
+    def visit_var_stmt(self, stmt: Var) -> str:
+        return self.__parenthesize("vardecl", stmt.name, stmt.initializer)
+
+    def visit_assign_expr(self, expr: Assign) -> str:
+        return self.__parenthesize("assign", expr.name, expr.value)
+
+    def visit_binary_expr(self, expr: Binary) -> str:
         return self.__parenthesize(expr.operator.lexeme, expr.left, expr.right)
 
-    def visitGroupingExpr(self, expr: Grouping) -> str:
+    def visit_grouping_expr(self, expr: Grouping) -> str:
         return self.__parenthesize("group", expr.expression)
 
-    def visitLiteralExpr(self, expr: Literal) -> str:
+    def visit_literal_expr(self, expr: Literal) -> str:
         return "nil" if expr.value is None else str(expr.value)
 
-    def visitUnaryExpr(self, expr: Unary) -> str:
+    def visit_unary_expr(self, expr: Unary) -> str:
         return self.__parenthesize(expr.operator.lexeme, expr.right)
 
-    def __parenthesize(self, name: str, *exprs: Expr | Stmt) -> str:
+    def visit_variable_expr(self, expr: Variable) -> str:
+        return expr.name.lexeme
+
+    def __parenthesize(self, name: str, *items: Token | Expr | Stmt | None) -> str:
         s = f"({name}"
-        for expr in exprs:
-            s += " " + expr.accept(self)
+        for item in items:
+            if isinstance(item, Token):
+                s += " " + item.lexeme
+            else:
+                s += " " + (item.accept(self) if item is not None else "nil")
         s += ")"
         return s
 
 
 if __name__ == "__main__":
     statements = [
+        Var(Token(TT.IDENTIFIER, "var1", None, 1), None),
+        Assign(Token(TT.IDENTIFIER, "var1", None, 1), Literal("aaa")),
         Print(
             Binary(
-                Unary(Token(TokenType.MINUS, "-", None, 1), Literal(123)),
-                Token(TokenType.STAR, "*", None, 1),
-                Grouping(Literal(45.67)),
+                Unary(Token(TT.MINUS, "-", None, 1), Literal(123)),
+                Token(TT.STAR, "*", None, 1),
+                Grouping(Variable(Token(TT.IDENTIFIER, "var1", None, 1))),
             )
         ),
         Expression(Literal(1)),

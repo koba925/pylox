@@ -1,11 +1,10 @@
 from typing import Generator
 
 import pytest
-
 from lox_error import LoxError
-from lox_scanner import Scanner
-from lox_parser import Parser
 from lox_interpreter import Interpreter
+from lox_parser import Parser
+from lox_scanner import Scanner
 
 
 @pytest.fixture(autouse=True)
@@ -94,6 +93,44 @@ statements: list[tuple[str, str, str, bool, bool]] = [
     ("print 0!=false;", "true", "", False, False),
     ("print 1!=nil;", "true", "", False, False),
     ("print (2+3)*4;", "20", "", False, False),
+    ("var a = 1; print a;", "1", "", False, False),
+    ("var a; print a;", "nil", "", False, False),
+    ("var a = 1; var b = 2; print a + b;", "3", "", False, False),
+    ("var a = 1; print a = 2; print a;", "2\n2", "", False, False),
+    (
+        'print a; var a = "too late!";',
+        "",
+        "Undefined variable 'a'.\n[line 1]",
+        False,
+        True,
+    ),
+    (
+        "a = 1;",
+        "",
+        "Undefined variable 'a'.\n[line 1]",
+        False,
+        True,
+    ),
+    # (
+    #     """\
+    #     fun isOdd(n) {
+    #         if (n == 0) return false;
+    #         return isEven(n - 1);
+    #     }
+    #     fun isEven(n) {
+    #         if (n == 0) return true;
+    #         return isOdd(n - 1);
+    #     }
+    #     print isOdd(2);
+    #     print isOdd(3);
+    #     print isEven(2);
+    #     print isEven(3);
+    #     """,
+    #     "",
+    #     "",
+    #     False,
+    #     False,
+    # ),
 ]
 
 

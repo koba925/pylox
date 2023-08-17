@@ -1,15 +1,22 @@
 from typing import Any
 
-from lox_expr import Binary, Expr, Grouping, Literal, ExprVisitor, Unary
-from lox_stmt import StmtVisitor, Stmt, Expression, Print
-from lox_token import Token, TokenType
+from lox_environment import Environment
 from lox_error import LoxError
+from lox_expr import Binary, Expr, ExprVisitor, Grouping, Literal, Unary, Variable
 from lox_runtime_error import LoxRuntimeError
+from lox_stmt import Expression, Print, Stmt, StmtVisitor, Var
+from lox_token import Token
+from lox_token import TokenType as TT
+
+from pylox.lox_expr import Assign
 
 # TODO: use operator module
 
 
 class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
+    def __init__(self) -> None:
+        self.__environment = Environment()
+
     def interpret(self, statements: list[Stmt]) -> None:
         try:
             for statement in statements:
@@ -23,39 +30,51 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def __execute(self, stmt: Stmt) -> None:
         stmt.accept(self)
 
-    def visitExpressionStmt(self, stmt: Expression) -> None:
+    def visit_expression_stmt(self, stmt: Expression) -> None:
         self.__evaluate(stmt.expression)
 
-    def visitPrintStmt(self, stmt: Print) -> None:
+    def visit_print_stmt(self, stmt: Print) -> None:
         value = self.__evaluate(stmt.expression)
         print(self.__stringify(value))
 
-    def visitBinaryExpr(self, expr: Binary) -> Any:
+    def visit_var_stmt(self, stmt: Var) -> None:
+        value = None
+        if stmt.initializer is not None:
+            value = self.__evaluate(stmt.initializer)
+
+        self.__environment.define(stmt.name.lexeme, value)
+
+    def visit_assign_expr(self, expr: Assign) -> Any:
+        value = self.__evaluate(expr.value)
+        self.__environment.assign(expr.name, value)
+        return value
+
+    def visit_binary_expr(self, expr: Binary) -> Any:
         left = self.__evaluate(expr.left)
         right = self.__evaluate(expr.right)
 
-        if expr.operator.token_type == TokenType.BANG_EQUAL:
+        if expr.operator.token_type == TT.BANG_EQUAL:
             return not self.__is_equal(left, right)
-        if expr.operator.token_type == TokenType.EQUAL_EQUAL:
+        if expr.operator.token_type == TT.EQUAL_EQUAL:
             return self.__is_equal(left, right)
 
-        if expr.operator.token_type == TokenType.GREATER:
+        if expr.operator.token_type == TT.GREATER:
             self.__check_number_operands(expr.operator, left, right)
             return float(left) > float(right)
-        if expr.operator.token_type == TokenType.GREATER_EQUAL:
+        if expr.operator.token_type == TT.GREATER_EQUAL:
             self.__check_number_operands(expr.operator, left, right)
             return float(left) >= float(right)
-        if expr.operator.token_type == TokenType.LESS:
+        if expr.operator.token_type == TT.LESS:
             self.__check_number_operands(expr.operator, left, right)
             return float(left) < float(right)
-        if expr.operator.token_type == TokenType.LESS_EQUAL:
+        if expr.operator.token_type == TT.LESS_EQUAL:
             self.__check_number_operands(expr.operator, left, right)
             return float(left) <= float(right)
 
-        if expr.operator.token_type == TokenType.MINUS:
+        if expr.operator.token_type == TT.MINUS:
             self.__check_number_operands(expr.operator, left, right)
             return float(left) - float(right)
-        if expr.operator.token_type == TokenType.PLUS:
+        if expr.operator.token_type == TT.PLUS:
             if isinstance(left, float) and isinstance(right, float):
                 return float(left) + float(right)
             if isinstance(left, str) and isinstance(right, str):
@@ -63,33 +82,36 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
             raise LoxRuntimeError(
                 expr.operator, "Operands must be two numbers or two strings."
             )
-        if expr.operator.token_type == TokenType.SLASH:
+        if expr.operator.token_type == TT.SLASH:
             self.__check_number_operands(expr.operator, left, right)
             return float(left) / float(right)
-        if expr.operator.token_type == TokenType.STAR:
+        if expr.operator.token_type == TT.STAR:
             self.__check_number_operands(expr.operator, left, right)
             return float(left) * float(right)
 
         # Unreachable.
         return None
 
-    def visitGroupingExpr(self, expr: Grouping) -> Any:
+    def visit_grouping_expr(self, expr: Grouping) -> Any:
         return self.__evaluate(expr.expression)
 
-    def visitLiteralExpr(self, expr: Literal) -> Any:
+    def visit_literal_expr(self, expr: Literal) -> Any:
         return expr.value
 
-    def visitUnaryExpr(self, expr: Unary) -> Any:
+    def visit_unary_expr(self, expr: Unary) -> Any:
         right = self.__evaluate(expr.right)
 
-        if expr.operator.token_type == TokenType.BANG:
+        if expr.operator.token_type == TT.BANG:
             return not self.__is_truthy(right)
-        if expr.operator.token_type == TokenType.MINUS:
+        if expr.operator.token_type == TT.MINUS:
             self.__check_number_operand(expr.operator, right)
             return -float(right)
 
         # Unreachable.
         return None
+
+    def visit_variable_expr(self, expr: Variable) -> Any:
+        return self.__environment.get(expr.name)
 
     def __check_number_operand(self, operator: Token, operand: Any) -> None:
         if isinstance(operand, float):

@@ -1,27 +1,28 @@
 from typing import Any
 
 from lox_error import LoxError
-from lox_token import Token, TokenType
+from lox_token import Token
+from lox_token import TokenType as TT
 
 
 class Scanner:
     __KEYWORDS = {
-        "and": TokenType.AND,
-        "class": TokenType.CLASS,
-        "else": TokenType.ELSE,
-        "false": TokenType.FALSE,
-        "for": TokenType.FOR,
-        "fun": TokenType.FUN,
-        "if": TokenType.IF,
-        "nil": TokenType.NIL,
-        "or": TokenType.OR,
-        "print": TokenType.PRINT,
-        "return": TokenType.RETURN,
-        "super": TokenType.SUPER,
-        "this": TokenType.THIS,
-        "true": TokenType.TRUE,
-        "var": TokenType.VAR,
-        "while": TokenType.WHILE,
+        "and": TT.AND,
+        "class": TT.CLASS,
+        "else": TT.ELSE,
+        "false": TT.FALSE,
+        "for": TT.FOR,
+        "fun": TT.FUN,
+        "if": TT.IF,
+        "nil": TT.NIL,
+        "or": TT.OR,
+        "print": TT.PRINT,
+        "return": TT.RETURN,
+        "super": TT.SUPER,
+        "this": TT.THIS,
+        "true": TT.TRUE,
+        "var": TT.VAR,
+        "while": TT.WHILE,
     }
 
     def __init__(self, source: str) -> None:
@@ -37,54 +38,46 @@ class Scanner:
             self.__start = self.__current
             self.__scanToken()
 
-        self.__tokens.append(Token(TokenType.EOF, "", None, self.__line))
+        self.__tokens.append(Token(TT.EOF, "", None, self.__line))
         return self.__tokens
 
     def __scanToken(self) -> None:
         c = self.__advance()
         if c == "(":
-            self.__add_token(TokenType.LEFT_PAREN)
+            self.__add_token(TT.LEFT_PAREN)
         elif c == ")":
-            self.__add_token(TokenType.RIGHT_PAREN)
+            self.__add_token(TT.RIGHT_PAREN)
         elif c == "{":
-            self.__add_token(TokenType.LEFT_BRACE)
+            self.__add_token(TT.LEFT_BRACE)
         elif c == "}":
-            self.__add_token(TokenType.RIGHT_BRACE)
+            self.__add_token(TT.RIGHT_BRACE)
         elif c == ",":
-            self.__add_token(TokenType.COMMA)
+            self.__add_token(TT.COMMA)
         elif c == ".":
-            self.__add_token(TokenType.DOT)
+            self.__add_token(TT.DOT)
         elif c == "-":
-            self.__add_token(TokenType.MINUS)
+            self.__add_token(TT.MINUS)
         elif c == "+":
-            self.__add_token(TokenType.PLUS)
+            self.__add_token(TT.PLUS)
         elif c == ";":
-            self.__add_token(TokenType.SEMICOLON)
+            self.__add_token(TT.SEMICOLON)
         elif c == "*":
-            self.__add_token(TokenType.STAR)
+            self.__add_token(TT.STAR)
         elif c == "!":
-            self.__add_token(
-                TokenType.BANG_EQUAL if self.__match("=") else TokenType.BANG
-            )
+            self.__add_token(TT.BANG_EQUAL if self.__match("=") else TT.BANG)
         elif c == "=":
-            self.__add_token(
-                TokenType.EQUAL_EQUAL if self.__match("=") else TokenType.EQUAL
-            )
+            self.__add_token(TT.EQUAL_EQUAL if self.__match("=") else TT.EQUAL)
         elif c == "<":
-            self.__add_token(
-                TokenType.LESS_EQUAL if self.__match("=") else TokenType.LESS
-            )
+            self.__add_token(TT.LESS_EQUAL if self.__match("=") else TT.LESS)
         elif c == ">":
-            self.__add_token(
-                TokenType.GREATER_EQUAL if self.__match("=") else TokenType.GREATER
-            )
+            self.__add_token(TT.GREATER_EQUAL if self.__match("=") else TT.GREATER)
         elif c == "/":
             if self.__match("/"):
                 # A comment goes until the end of the line.
                 while self.__peek() != "\n" and not self.__is_at_end():
                     self.__advance()
             else:
-                self.__add_token(TokenType.SLASH)
+                self.__add_token(TT.SLASH)
         elif c in " \r\t":
             # Ignore whitespaces.
             pass
@@ -105,7 +98,7 @@ class Scanner:
 
         text = self.__source[self.__start : self.__current]
         self.__add_token(
-            self.__KEYWORDS[text] if text in self.__KEYWORDS else TokenType.IDENTIFIER
+            self.__KEYWORDS[text] if text in self.__KEYWORDS else TT.IDENTIFIER
         )
 
     def __number(self) -> None:
@@ -120,9 +113,7 @@ class Scanner:
             while self.__peek().isdigit():
                 self.__advance()
 
-        self.__add_token(
-            TokenType.NUMBER, float(self.__source[self.__start : self.__current])
-        )
+        self.__add_token(TT.NUMBER, float(self.__source[self.__start : self.__current]))
 
     def __string(self) -> None:
         while self.__peek() != '"' and not self.__is_at_end():
@@ -139,7 +130,7 @@ class Scanner:
 
         # Trim the surrounding quotes.
         value = self.__source[self.__start + 1 : self.__current - 1]
-        self.__add_token(TokenType.STRING, value)
+        self.__add_token(TT.STRING, value)
 
     def __match(self, expected: str) -> bool:
         if self.__is_at_end():
@@ -176,6 +167,6 @@ class Scanner:
         self.__current += 1
         return self.__source[self.__current - 1]
 
-    def __add_token(self, token_type: TokenType, literal: Any = None) -> None:
+    def __add_token(self, token_type: TT, literal: Any = None) -> None:
         text = self.__source[self.__start : self.__current]
         self.__tokens.append(Token(token_type, text, literal, self.__line))
