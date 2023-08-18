@@ -2,13 +2,20 @@ from typing import Any
 
 from lox_environment import Environment
 from lox_error import LoxError
-from lox_expr import Binary, Expr, ExprVisitor, Grouping, Literal, Unary, Variable
+from lox_expr import (
+    Assign,
+    Binary,
+    Expr,
+    ExprVisitor,
+    Grouping,
+    Literal,
+    Unary,
+    Variable,
+)
 from lox_runtime_error import LoxRuntimeError
-from lox_stmt import Expression, Print, Stmt, StmtVisitor, Var
+from lox_stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
 from lox_token import Token
 from lox_token import TokenType as TT
-
-from pylox.lox_expr import Assign
 
 # TODO: use operator module
 
@@ -29,6 +36,21 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
     def __execute(self, stmt: Stmt) -> None:
         stmt.accept(self)
+
+    def __execute_block(self, statements: list[Stmt], environment: Environment) -> None:
+        previous = self.__environment
+
+        try:
+            self.__environment = environment
+
+            for statement in statements:
+                self.__execute(statement)
+        finally:
+            self.__environment = previous
+
+    def visit_block_stmt(self, stmt: Block) -> None:
+        self.__execute_block(stmt.statements, Environment(self.__environment))
+        return None
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.__evaluate(stmt.expression)

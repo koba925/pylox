@@ -8,7 +8,7 @@ from lox_expr import (
     Unary,
     Variable,
 )
-from lox_stmt import Expression, Print, Stmt, StmtVisitor, Var
+from lox_stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
 from lox_token import Token
 from lox_token import TokenType as TT
 
@@ -16,6 +16,9 @@ from lox_token import TokenType as TT
 class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
     def print(self, stmts: list[Stmt]) -> list[str]:
         return [stmt.accept(self) for stmt in stmts if stmt is not None]
+
+    def visit_block_stmt(self, stmt: Block) -> str:
+        return self.__parenthesize("block", *stmt.statements)
 
     def visit_expression_stmt(self, stmt: Expression) -> str:
         return self.__parenthesize("expr", stmt.expression)
@@ -66,7 +69,7 @@ if __name__ == "__main__":
                 Grouping(Variable(Token(TT.IDENTIFIER, "var1", None, 1))),
             )
         ),
-        Expression(Literal(1)),
+        Block([Expression(Literal(1)), Expression(Literal(1))]),
     ]
 
     print(*AstPrinter().print(statements), sep="\n")

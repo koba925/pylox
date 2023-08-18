@@ -111,6 +111,126 @@ statements: list[tuple[str, str, str, bool, bool]] = [
         False,
         True,
     ),
+    (
+        "{var a = 1; print a;}",
+        "1",
+        "",
+        False,
+        False,
+    ),
+    (
+        "{} print 1;",
+        "1",
+        "",
+        False,
+        False,
+    ),
+    (
+        "{var a = 1; print a;",
+        "",
+        "[line 1] Error at end: Expect '}' after block.",
+        True,
+        False,
+    ),
+    (
+        """\
+        {
+        var a = "first";
+        print a; // "first".
+        }
+
+        {
+        var a = "second";
+        print a; // "second".
+        }
+        """,
+        "first\nsecond",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        // How loud?
+        var volume = 11;
+
+        // Silence.
+        volume = 0;
+
+        // Calculate size of 3x4x5 cuboid.
+        {
+        var volume = 3 * 4 * 5;
+        print volume;
+        }
+
+        print volume;
+        """,
+        "60\n0",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        var global = "outside";
+        {
+        var local = "inside";
+        print global + local;
+        }
+        """,
+        "outsideinside",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        var a = "global a";
+        var b = "global b";
+        var c = "global c";
+        {
+        var a = "outer a";
+        var b = "outer b";
+        {
+            var a = "inner a";
+            print a;
+            print b;
+            print c;
+        }
+        print a;
+        print b;
+        print c;
+        }
+        print a;
+        print b;
+        print c;
+        """,
+        """\
+inner a
+outer b
+global c
+outer a
+outer b
+global c
+global a
+global b
+global c""",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        {
+        var a = "in block";
+        }
+        print a; // Error! No more "a".
+        """,
+        "",
+        "Undefined variable 'a'.\n[line 4]",
+        False,
+        True,
+    ),
     # (
     #     """\
     #     fun isOdd(n) {
@@ -127,6 +247,29 @@ statements: list[tuple[str, str, str, bool, bool]] = [
     #     print isEven(3);
     #     """,
     #     "",
+    #     "",
+    #     False,
+    #     False,
+    # ),
+    # (
+    #     """\
+    #     class Saxophone {
+    #     play() {
+    #         print "Careless Whisper";
+    #     }
+    #     }
+    #     class GolfClub {
+    #     play() {
+    #         print "Fore!";
+    #     }
+    #     }
+    #     fun playIt(thing) {
+    #     thing.play();
+    #     }
+    #     print playIt(Saxophone())
+    #     print playIt(GolfClub())
+    #     """,
+    #     "Careless Whisper\nFore!",
     #     "",
     #     False,
     #     False,
@@ -148,9 +291,10 @@ def test_statements(
     tokens = Scanner(source).scanTokens()
     assert LoxError.had_error is False
     stmts = Parser(tokens).parse()
-    assert LoxError.had_error is False
-    assert stmts is not None
-    Interpreter().interpret(stmts)
+    assert LoxError.had_error is had_error
+    if not had_error:
+        assert stmts is not None
+        Interpreter().interpret(stmts)
 
     out, err = capfd.readouterr()
     print(f"out, err = '{out}', '{err}'")

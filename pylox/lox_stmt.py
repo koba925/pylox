@@ -10,6 +10,10 @@ R = TypeVar("R")
 
 class StmtVisitor(ABC, Generic[R]):
     @abstractmethod
+    def visit_block_stmt(self, stmt: "Block") -> R:
+        raise NotImplementedError()
+
+    @abstractmethod
     def visit_expression_stmt(self, stmt: "Expression") -> R:
         raise NotImplementedError()
 
@@ -26,6 +30,14 @@ class Stmt:
     @abstractmethod
     def accept(self, visitor: StmtVisitor[R]) -> R:
         raise NotImplementedError()
+
+
+@dataclass
+class Block(Stmt):
+    statements: list[Stmt]
+
+    def accept(self, visitor: StmtVisitor[R]) -> R:
+        return visitor.visit_block_stmt(self)
 
 
 @dataclass

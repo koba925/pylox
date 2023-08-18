@@ -2,7 +2,7 @@ from typing import Optional
 
 from lox_error import LoxError
 from lox_expr import Assign, Binary, Expr, Grouping, Literal, Unary, Variable
-from lox_stmt import Expression, Print, Stmt, Var
+from lox_stmt import Block, Expression, Print, Stmt, Var
 from lox_token import Token
 from lox_token import TokenType as TT
 
@@ -35,6 +35,8 @@ class Parser:
     def __statement(self) -> Stmt:
         if self.__match(TT.PRINT):
             return self.__print_statement()
+        if self.__match(TT.LEFT_BRACE):
+            return Block(self.__block())
 
         return self.__expression_statement()
 
@@ -57,6 +59,15 @@ class Parser:
         expr = self.__expression()
         self.__consume(TT.SEMICOLON, "Expect ';' after expression.")
         return Expression(expr)
+
+    def __block(self) -> list[Stmt]:
+        statements = []
+
+        while not self.__check(TT.RIGHT_BRACE) and not self.__is_at_end():
+            statements.append(self.__declaration())
+
+        self.__consume(TT.RIGHT_BRACE, "Expect '}' after block.")
+        return statements
 
     def __expression(self) -> Expr:
         return self.__assignment()
