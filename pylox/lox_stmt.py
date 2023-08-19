@@ -18,6 +18,10 @@ class StmtVisitor(ABC, Generic[R]):
         raise NotImplementedError()
 
     @abstractmethod
+    def visit_if_stmt(self, stmt: "If") -> R:
+        raise NotImplementedError
+
+    @abstractmethod
     def visit_print_stmt(self, stmt: "Print") -> R:
         raise NotImplementedError()
 
@@ -46,6 +50,16 @@ class Expression(Stmt):
 
     def accept(self, visitor: StmtVisitor[R]) -> R:
         return visitor.visit_expression_stmt(self)
+
+
+@dataclass
+class If(Stmt):
+    condition: Expr
+    then_branch: Stmt
+    else_branch: Stmt
+
+    def accept(self, visitor: StmtVisitor[R]) -> R:
+        return visitor.visit_if_stmt(self)
 
 
 @dataclass

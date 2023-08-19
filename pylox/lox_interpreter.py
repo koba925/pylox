@@ -13,7 +13,7 @@ from lox_expr import (
     Variable,
 )
 from lox_runtime_error import LoxRuntimeError
-from lox_stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
+from lox_stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var
 from lox_token import Token
 from lox_token import TokenType as TT
 
@@ -54,6 +54,12 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.__evaluate(stmt.expression)
+
+    def visit_if_stmt(self, stmt: If) -> None:
+        if self.__is_truthy(self.__evaluate(stmt.condition)):
+            self.__execute(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self.__execute(stmt.else_branch)
 
     def visit_print_stmt(self, stmt: Print) -> None:
         value = self.__evaluate(stmt.expression)

@@ -2,7 +2,7 @@ from typing import Optional
 
 from lox_error import LoxError
 from lox_expr import Assign, Binary, Expr, Grouping, Literal, Unary, Variable
-from lox_stmt import Block, Expression, Print, Stmt, Var
+from lox_stmt import Block, Expression, If, Print, Stmt, Var
 from lox_token import Token
 from lox_token import TokenType as TT
 
@@ -33,12 +33,26 @@ class Parser:
             return None
 
     def __statement(self) -> Stmt:
+        if self.__match(TT.IF):
+            return self.__if_statement()
         if self.__match(TT.PRINT):
             return self.__print_statement()
         if self.__match(TT.LEFT_BRACE):
             return Block(self.__block())
 
         return self.__expression_statement()
+
+    def __if_statement(self) -> Stmt:
+        self.__consume(TT.LEFT_PAREN, "Expect '(' after 'if'.")
+        condition = self.__expression()
+        self.__consume(TT.RIGHT_PAREN, "Expect ')' after if condition.")
+
+        then_branch = self.__statement()
+        else_branch = None
+        if self.__match(TT.ELSE):
+            else_branch = self.__statement()
+
+        return If(condition, then_branch, else_branch)
 
     def __print_statement(self) -> Stmt:
         value = self.__expression()

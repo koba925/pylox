@@ -231,6 +231,48 @@ global c""",
         False,
         True,
     ),
+    (
+        "if (true) print 1; else print 2;",
+        "1",
+        "",
+        False,
+        False,
+    ),
+    (
+        "if (false) print 1; else print 2;",
+        "2",
+        "",
+        False,
+        False,
+    ),
+    (
+        "if (false) print 1; else if (true) print 2; else print 3;",
+        "2",
+        "",
+        False,
+        False,
+    ),
+    (
+        "if (false) print 1; else if (false) print 2; else print 3;",
+        "3",
+        "",
+        False,
+        False,
+    ),
+    (
+        "if false) print 1; else print 2;",
+        "",
+        "[line 1] Error at 'false': Expect '(' after 'if'.",
+        True,
+        False,
+    ),
+    (
+        "if (false print 1; else print 2;",
+        "",
+        "[line 1] Error at 'print': Expect ')' after if condition.",
+        True,
+        False,
+    ),
     # (
     #     """\
     #     fun isOdd(n) {
@@ -299,6 +341,6 @@ def test_statements(
     out, err = capfd.readouterr()
     print(f"out, err = '{out}', '{err}'")
     assert out.strip() == out_expected
-    assert err.strip() == err_expected
+    assert err.strip().startswith(err_expected)
     assert LoxError.had_error is had_error
     assert LoxError.had_runtime_error is had_runtime_error

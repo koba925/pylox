@@ -11,6 +11,7 @@ from lox_expr import (
 from lox_stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
 from lox_token import Token
 from lox_token import TokenType as TT
+from pylox.lox_stmt import If
 
 
 class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
@@ -22,6 +23,11 @@ class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
 
     def visit_expression_stmt(self, stmt: Expression) -> str:
         return self.__parenthesize("expr", stmt.expression)
+
+    def visit_if_stmt(self, stmt: If) -> str:
+        return self.__parenthesize(
+            "if", stmt.condition, stmt.then_branch, stmt.else_branch
+        )
 
     def visit_print_stmt(self, stmt: Print) -> str:
         return self.__parenthesize("print", stmt.expression)
