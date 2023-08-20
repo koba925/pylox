@@ -273,6 +273,22 @@ global c""",
         True,
         False,
     ),
+    (
+        "print true or true; print true or false; print false or true; print false or false;",
+        "true\ntrue\ntrue\nfalse",
+        "",
+        False,
+        False,
+    ),
+    (
+        "print true and true; print true and false; print false and true; print false and false;",
+        "true\nfalse\nfalse\nfalse",
+        "",
+        False,
+        False,
+    ),
+    ('print "hi" or 2; print nil or "yes";', "hi\nyes", "", False, False),
+    ('print "hi" and 2; print nil and "yes";', "2\nnil", "", False, False),
     # (
     #     """\
     #     fun isOdd(n) {
@@ -335,7 +351,7 @@ def test_statements(
     stmts = Parser(tokens).parse()
     assert LoxError.had_error is had_error
     if not had_error:
-        assert stmts is not None
+        assert all(stmt is not None for stmt in stmts)
         Interpreter().interpret(stmts)
 
     out, err = capfd.readouterr()

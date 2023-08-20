@@ -5,13 +5,13 @@ from lox_expr import (
     ExprVisitor,
     Grouping,
     Literal,
+    Logical,
     Unary,
     Variable,
 )
-from lox_stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
+from lox_stmt import Block, Expression, Print, If, Stmt, StmtVisitor, Var
 from lox_token import Token
 from lox_token import TokenType as TT
-from pylox.lox_stmt import If
 
 
 class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
@@ -47,6 +47,9 @@ class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
     def visit_literal_expr(self, expr: Literal) -> str:
         return "nil" if expr.value is None else str(expr.value)
 
+    def visit_logical_expr(self, expr: Logical) -> str:
+        return self.__parenthesize(expr.operator.lexeme, expr.left, expr.right)
+
     def visit_unary_expr(self, expr: Unary) -> str:
         return self.__parenthesize(expr.operator.lexeme, expr.right)
 
@@ -65,7 +68,7 @@ class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
 
 
 if __name__ == "__main__":
-    statements = [
+    statements: list[Stmt] = [
         Var(Token(TT.IDENTIFIER, "var1", None, 1), None),
         Assign(Token(TT.IDENTIFIER, "var1", None, 1), Literal("aaa")),
         Print(

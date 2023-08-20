@@ -1,7 +1,7 @@
 from typing import Optional
 
 from lox_error import LoxError
-from lox_expr import Assign, Binary, Expr, Grouping, Literal, Unary, Variable
+from lox_expr import Assign, Binary, Expr, Grouping, Literal, Logical, Unary, Variable
 from lox_stmt import Block, Expression, If, Print, Stmt, Var
 from lox_token import Token
 from lox_token import TokenType as TT
@@ -87,7 +87,7 @@ class Parser:
         return self.__assignment()
 
     def __assignment(self) -> Expr:
-        expr = self.__equality()
+        expr = self.__or()
 
         if self.__match(TT.EQUAL):
             equals = self.__previous()
@@ -98,6 +98,26 @@ class Parser:
                 return Assign(name, value)
 
             self.__error(equals, "Invalid assignment target.")
+
+        return expr
+
+    def __or(self) -> Expr:
+        expr = self.__and()
+
+        while self.__match(TT.OR):
+            operator = self.__previous()
+            right = self.__and()
+            expr = Logical(expr, operator, right)
+
+        return expr
+
+    def __and(self) -> Expr:
+        expr = self.__equality()
+
+        while self.__match(TT.AND):
+            operator = self.__previous()
+            right = self.__equality()
+            expr = Logical(expr, operator, right)
 
         return expr
 

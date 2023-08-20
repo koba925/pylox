@@ -9,6 +9,7 @@ from lox_expr import (
     ExprVisitor,
     Grouping,
     Literal,
+    Logical,
     Unary,
     Variable,
 )
@@ -125,6 +126,18 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
     def visit_literal_expr(self, expr: Literal) -> Any:
         return expr.value
+
+    def visit_logical_expr(self, expr: Logical) -> Any:
+        left = self.__evaluate(expr.left)
+
+        if expr.operator.token_type == TT.OR:
+            if self.__is_truthy(left):
+                return left
+        else:
+            if not self.__is_truthy(left):
+                return left
+
+        return self.__evaluate(expr.right)
 
     def visit_unary_expr(self, expr: Unary) -> Any:
         right = self.__evaluate(expr.right)

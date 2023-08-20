@@ -25,6 +25,10 @@ class ExprVisitor(ABC, Generic[R]):
         raise NotImplementedError()
 
     @abstractmethod
+    def visit_logical_expr(self, expr: "Logical") -> R:
+        raise NotImplementedError()
+
+    @abstractmethod
     def visit_unary_expr(self, expr: "Unary") -> R:
         raise NotImplementedError()
 
@@ -72,6 +76,16 @@ class Literal(Expr):
 
     def accept(self, visitor: ExprVisitor[R]) -> R:
         return visitor.visit_literal_expr(self)
+
+
+@dataclass
+class Logical(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+    def accept(self, visitor: ExprVisitor[R]) -> R:
+        return visitor.visit_logical_expr(self)
 
 
 @dataclass
