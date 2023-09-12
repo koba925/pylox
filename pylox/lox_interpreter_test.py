@@ -289,6 +289,57 @@ global c""",
     ),
     ('print "hi" or 2; print nil or "yes";', "hi\nyes", "", False, False),
     ('print "hi" and 2; print nil and "yes";', "2\nnil", "", False, False),
+    (
+        "var i = 0; while (i < 3) {print i; i = i + 1;}",
+        "0\n1\n2",
+        "",
+        False,
+        False,
+    ),
+    (
+        "var i = 0; while i < 3) {print i; i = i + 1;}",
+        "",
+        "[line 1] Error at 'i': Expect '(' after 'while'.",
+        True,
+        False,
+    ),
+    (
+        "var i = 0; while (i < 3 {print i; i = i + 1;}",
+        "",
+        "[line 1] Error at '{': Expect ')' after condition.",
+        True,
+        False,
+    ),
+    (
+        """
+        var a = 0;
+        var temp;
+
+        for (var b = 1; a < 100; b = temp + b) {
+        print a;
+        temp = a;
+        a = b;
+        }
+        """,
+        "0\n1\n1\n2\n3\n5\n8\n13\n21\n34\n55\n89",
+        "",
+        False,
+        False,
+    ),
+    (
+        '"totally not a function"();',
+        "",
+        "Can only call functions and classes.\n[line 1]",
+        False,
+        True,
+    ),
+    (
+        "print clock();",
+        "",
+        "Can only call functions and classes.\n[line 1]",
+        False,
+        True,
+    ),
     # (
     #     """\
     #     fun isOdd(n) {

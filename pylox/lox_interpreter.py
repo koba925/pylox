@@ -5,6 +5,7 @@ from lox_error import LoxError
 from lox_expr import (
     Assign,
     Binary,
+    Call,
     Expr,
     ExprVisitor,
     Grouping,
@@ -14,16 +15,20 @@ from lox_expr import (
     Variable,
 )
 from lox_runtime_error import LoxRuntimeError
-from lox_stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var
+from lox_stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var, While
 from lox_token import Token
 from lox_token import TokenType as TT
+from lox_callable import LoxCallable  # , Clock
 
 # TODO: use operator module
 
 
 class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def __init__(self) -> None:
-        self.__environment = Environment()
+        self.globals = Environment()
+        self.__environment = self.globals
+
+        # globals.define("clock", Clock)
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -73,6 +78,10 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
         self.__environment.define(stmt.name.lexeme, value)
 
+    def visit_while_stmt(self, stmt: While) -> None:
+        while self.__is_truthy(self.__evaluate(stmt.condition)):
+            self.__execute(stmt.body)
+
     def visit_assign_expr(self, expr: Assign) -> Any:
         value = self.__evaluate(expr.value)
         self.__environment.assign(expr.name, value)
@@ -120,6 +129,24 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
         # Unreachable.
         return None
+
+    def visit_call_expr(self, expr: Call) -> Any:
+        callee = self.__evaluate(expr.callee)
+
+        arguments = []
+        for argument in expr.arguments:
+            arguments.append(self.__evaluate(argument))
+
+        if not isinstance(callee, LoxCallable):
+            raise RuntimeError(expr.paren, "Can only call functions and classes.")
+
+        if len(arguments) != callee.arity():
+            raise RuntimeError(
+                expr.paren,
+                f"Expected {function.arity()} arguments but got {len(arguments)}.",
+            )
+
+        return callee.call(self, arguments)
 
     def visit_grouping_expr(self, expr: Grouping) -> Any:
         return self.__evaluate(expr.expression)

@@ -29,6 +29,10 @@ class StmtVisitor(ABC, Generic[R]):
     def visit_var_stmt(self, stmt: "Var") -> R:
         raise NotImplementedError()
 
+    @abstractmethod
+    def visit_while_stmt(self, stmt: "While") -> R:
+        raise NotImplementedError()
+
 
 class Stmt:
     @abstractmethod
@@ -56,7 +60,7 @@ class Expression(Stmt):
 class If(Stmt):
     condition: Expr
     then_branch: Stmt
-    else_branch: Stmt
+    else_branch: Optional[Stmt]
 
     def accept(self, visitor: StmtVisitor[R]) -> R:
         return visitor.visit_if_stmt(self)
@@ -77,3 +81,12 @@ class Var(Stmt):
 
     def accept(self, visitor: StmtVisitor[R]) -> R:
         return visitor.visit_var_stmt(self)
+
+
+@dataclass
+class While(Stmt):
+    condition: Expr
+    body: Stmt
+
+    def accept(self, visitor: StmtVisitor[R]) -> R:
+        return visitor.visit_while_stmt(self)

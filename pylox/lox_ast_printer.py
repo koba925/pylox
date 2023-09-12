@@ -1,6 +1,7 @@
 from lox_expr import (
     Assign,
     Binary,
+    Call,
     Expr,
     ExprVisitor,
     Grouping,
@@ -9,7 +10,7 @@ from lox_expr import (
     Unary,
     Variable,
 )
-from lox_stmt import Block, Expression, Print, If, Stmt, StmtVisitor, Var
+from lox_stmt import Block, Expression, Print, If, Stmt, StmtVisitor, Var, While
 from lox_token import Token
 from lox_token import TokenType as TT
 
@@ -35,11 +36,17 @@ class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
     def visit_var_stmt(self, stmt: Var) -> str:
         return self.__parenthesize("vardecl", stmt.name, stmt.initializer)
 
+    def visit_while_stmt(self, stmt: While) -> str:
+        return self.__parenthesize("while", stmt.condition, stmt.body)
+
     def visit_assign_expr(self, expr: Assign) -> str:
         return self.__parenthesize("assign", expr.name, expr.value)
 
     def visit_binary_expr(self, expr: Binary) -> str:
         return self.__parenthesize(expr.operator.lexeme, expr.left, expr.right)
+
+    def visit_call_expr(self, expr: Call) -> str:
+        return self.__parenthesize("call", expr.callee, *expr.arguments)
 
     def visit_grouping_expr(self, expr: Grouping) -> str:
         return self.__parenthesize("group", expr.expression)
@@ -70,7 +77,10 @@ class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
 if __name__ == "__main__":
     statements: list[Stmt] = [
         Var(Token(TT.IDENTIFIER, "var1", None, 1), None),
-        Assign(Token(TT.IDENTIFIER, "var1", None, 1), Literal("aaa")),
+        Expression(Assign(Token(TT.IDENTIFIER, "var1", None, 1), Literal("aaa"))),
+        Expression(Call(Variable(Token(TT.IDENTIFIER, "func_foo", None, 1)),
+                        Token(TT.RIGHT_PAREN, ")", None, 1),
+                        [Literal("aaa")])),
         Print(
             Binary(
                 Unary(Token(TT.MINUS, "-", None, 1), Literal(123)),
@@ -78,7 +88,8 @@ if __name__ == "__main__":
                 Grouping(Variable(Token(TT.IDENTIFIER, "var1", None, 1))),
             )
         ),
-        Block([Expression(Literal(1)), Expression(Literal(1))]),
+        While(Literal(True), Block(
+            [Expression(Literal(1)), Expression(Literal(1))])),
     ]
 
     print(*AstPrinter().print(statements), sep="\n")
