@@ -1,0 +1,10 @@
+services:
+  python3-pylox:
+    image: python3:1.0
+    build: ./python3
+    container_name: 'python3-pylox'
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace

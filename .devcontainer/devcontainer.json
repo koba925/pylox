@@ -1,0 +1,16 @@
+{
+	"name": "python3-pylox",
+	"dockerComposeFile": "compose.yml",
+	"service": "python3-pylox",
+	"workspaceFolder": "/workspace",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.black-formatter"
+			]
+		}
+	},
+	"remoteUser": "vscode"
+}
