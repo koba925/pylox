@@ -1,7 +1,4 @@
 {
-    "pylint.args": [
-        "--disable=C0103,C0114,C0115,C0116"
-    ],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
@@ -12,4 +9,8 @@
     "python.analysis.extraPaths": [
         "/home/takahiro/pylox/"
     ],
+    "python.analysis.typeCheckingMode": "basic",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
 }
