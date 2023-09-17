@@ -11,6 +11,8 @@ RUN groupadd --gid ${USER_GID} ${GROUPNAME} \
     && apt-get install -y --no-install-recommends sudo git\ 
     && echo ${USERNAME} ALL=\(ALL\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
+    && apt-get autoremove -y \
+    && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /tmp/requirements.txt

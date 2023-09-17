@@ -1,10 +1,10 @@
 services:
-  python3-pylox:
-    image: python3:1.0
+  pylox:
+    image: devcon_pylox:1.0
     build: ./python3
-    container_name: 'python3-pylox'
+    container_name: 'devcon_pylox'
     stdin_open: true
     tty: true
-    working_dir: /workspace
+    working_dir: /workspaces/pylox
     volumes:
-      - ..:/workspace
+      - ..:/workspaces/pylox

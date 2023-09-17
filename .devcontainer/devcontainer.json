@@ -1,10 +1,20 @@
 {
-	"name": "python3-pylox",
+	"name": "pylox",
 	"dockerComposeFile": "compose.yml",
-	"service": "python3-pylox",
-	"workspaceFolder": "/workspace",
+	"service": "pylox",
+	"workspaceFolder": "/workspaces/pylox",
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"python.testing.pytestEnabled": true,
+				"python.testing.unittestEnabled": false,
+				"python.testing.autoTestDiscoverOnSaveEnabled": true,
+				"python.analysis.typeCheckingMode": "basic",
+				"[python]": {
+					"editor.defaultFormatter": "ms-python.black-formatter",
+					"editor.formatOnSave": true
+				},
+			},
 			"extensions": [
 				"ms-python.python",
 				"ms-python.vscode-pylance",
