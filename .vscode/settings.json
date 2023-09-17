@@ -3,10 +3,6 @@
     "python.testing.unittestEnabled": false,
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.extraPaths": [
-        "/workspaces/pylox",
-        "/home/takahiro/pylox/"
-    ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true
