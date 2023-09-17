@@ -1,7 +1,17 @@
 from typing import Optional
 
 from lox_error import LoxError
-from lox_expr import Assign, Binary, Call, Expr, Grouping, Literal, Logical, Unary, Variable
+from lox_expr import (
+    Assign,
+    Binary,
+    Call,
+    Expr,
+    Grouping,
+    Literal,
+    Logical,
+    Unary,
+    Variable,
+)
 from lox_stmt import Block, Expression, If, Print, Stmt, Var, While
 from lox_token import Token
 from lox_token import TokenType as TT
@@ -52,16 +62,17 @@ class Parser:
         self.__consume(TT.LEFT_PAREN, "Expect '(' after 'for'.")
 
         initializer: Optional[Stmt] = (
-            None if self.__match(TT.SEMICOLON) else
-            self.__var_declaration() if self.__match(TT.VAR) else
-            self.__expression_statement()
+            None
+            if self.__match(TT.SEMICOLON)
+            else self.__var_declaration()
+            if self.__match(TT.VAR)
+            else self.__expression_statement()
         )
 
         condition = None if self.__check(TT.SEMICOLON) else self.__expression()
         self.__consume(TT.SEMICOLON, "Expect ';' after loop condition.")
 
-        increment = None if self.__check(
-            TT.RIGHT_PAREN) else self.__expression()
+        increment = None if self.__check(TT.RIGHT_PAREN) else self.__expression()
         self.__consume(TT.RIGHT_PAREN, "Expect ')' after for clauses.")
 
         body = self.__statement()
@@ -119,7 +130,7 @@ class Parser:
         return Expression(expr)
 
     def __block(self) -> list[Stmt]:
-        statements = []
+        statements: list[Stmt] = []
 
         while not self.__check(TT.RIGHT_BRACE) and not self.__is_at_end():
             statement = self.__declaration()
@@ -221,12 +232,11 @@ class Parser:
         return self.__call()
 
     def __finish_call(self, callee: Expr) -> Expr:
-        arguments = []
+        arguments: list[Expr] = []
         if not self.__check(TT.RIGHT_PAREN):
             while True:
                 if len(arguments) >= 255:
-                    self.__error(
-                        self.__peek(), "Can't have more than 255 arguments.")
+                    self.__error(self.__peek(), "Can't have more than 255 arguments.")
                 arguments.append(self.__expression())
                 if not self.__match(TT.COMMA):
                     break

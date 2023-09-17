@@ -133,7 +133,7 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def visit_call_expr(self, expr: Call) -> Any:
         callee = self.__evaluate(expr.callee)
 
-        arguments = []
+        arguments: list[Any] = []
         for argument in expr.arguments:
             arguments.append(self.__evaluate(argument))
 
@@ -143,7 +143,7 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
         if len(arguments) != callee.arity():
             raise RuntimeError(
                 expr.paren,
-                f"Expected {function.arity()} arguments but got {len(arguments)}.",
+                f"Expected {callee.arity()} arguments but got {len(arguments)}.",
             )
 
         return callee.call(self, arguments)

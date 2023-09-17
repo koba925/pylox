@@ -17,7 +17,7 @@ from lox_token import TokenType as TT
 
 class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
     def print(self, stmts: list[Stmt]) -> list[str]:
-        return [stmt.accept(self) for stmt in stmts if stmt is not None]
+        return [stmt.accept(self) for stmt in stmts]
 
     def visit_block_stmt(self, stmt: Block) -> str:
         return self.__parenthesize("block", *stmt.statements)
