@@ -2,9 +2,10 @@
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "strict",
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true
     },
+    "python.formatting.provider": "none",
 }

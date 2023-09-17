@@ -6,19 +6,21 @@
 	"customizations": {
 		"vscode": {
 			"settings": {
+				"terminal.integrated.shell.linux": "/bin/bash",
 				"python.testing.pytestEnabled": true,
 				"python.testing.unittestEnabled": false,
 				"python.testing.autoTestDiscoverOnSaveEnabled": true,
-				"python.analysis.typeCheckingMode": "basic",
+				"python.analysis.typeCheckingMode": "strict",
 				"[python]": {
 					"editor.defaultFormatter": "ms-python.black-formatter",
 					"editor.formatOnSave": true
-				},
+				}
 			},
 			"extensions": [
 				"ms-python.python",
 				"ms-python.vscode-pylance",
-				"ms-python.black-formatter"
+				"ms-python.black-formatter",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	},
