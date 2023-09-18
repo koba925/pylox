@@ -1,7 +1,6 @@
 services:
   pylox:
-    image: devcon_pylox:1.0
-    build: ./python3
+    image: mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
     container_name: 'devcon_pylox'
     stdin_open: true
     tty: true

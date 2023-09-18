@@ -3,6 +3,7 @@
 	"dockerComposeFile": "compose.yml",
 	"service": "pylox",
 	"workspaceFolder": "/workspaces/pylox",
+	"postCreateCommand": "bash .devcontainer/postcreate.sh",
 	"customizations": {
 		"vscode": {
 			"settings": {
