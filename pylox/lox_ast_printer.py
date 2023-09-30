@@ -10,7 +10,18 @@ from lox_expr import (
     Unary,
     Variable,
 )
-from lox_stmt import Block, Expression, Print, If, Stmt, StmtVisitor, Var, While
+from lox_stmt import (
+    Block,
+    Expression,
+    Function,
+    Print,
+    If,
+    Stmt,
+    StmtVisitor,
+    Return,
+    Var,
+    While,
+)
 from lox_token import Token
 from lox_token import TokenType as TT
 
@@ -25,6 +36,9 @@ class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
     def visit_expression_stmt(self, stmt: Expression) -> str:
         return self.__parenthesize("expr", stmt.expression)
 
+    def visit_function_stmt(self, stmt: Function) -> str:
+        return self.__parenthesize("function", stmt.name, *stmt.params, *stmt.body)
+
     def visit_if_stmt(self, stmt: If) -> str:
         return self.__parenthesize(
             "if", stmt.condition, stmt.then_branch, stmt.else_branch
@@ -32,6 +46,9 @@ class AstPrinter(ExprVisitor[str], StmtVisitor[str]):
 
     def visit_print_stmt(self, stmt: Print) -> str:
         return self.__parenthesize("print", stmt.expression)
+
+    def visit_return_stmt(self, stmt: Return) -> str:
+        return self.__parenthesize("return", stmt.value)
 
     def visit_var_stmt(self, stmt: Var) -> str:
         return self.__parenthesize("vardecl", stmt.name, stmt.initializer)
@@ -78,18 +95,28 @@ if __name__ == "__main__":
     statements: list[Stmt] = [
         Var(Token(TT.IDENTIFIER, "var1", None, 1), None),
         Expression(Assign(Token(TT.IDENTIFIER, "var1", None, 1), Literal("aaa"))),
-        Expression(Call(Variable(Token(TT.IDENTIFIER, "func_foo", None, 1)),
-                        Token(TT.RIGHT_PAREN, ")", None, 1),
-                        [Literal("aaa")])),
-        Print(
-            Binary(
-                Unary(Token(TT.MINUS, "-", None, 1), Literal(123)),
-                Token(TT.STAR, "*", None, 1),
-                Grouping(Variable(Token(TT.IDENTIFIER, "var1", None, 1))),
+        Expression(
+            Call(
+                Variable(Token(TT.IDENTIFIER, "func_foo", None, 1)),
+                Token(TT.RIGHT_PAREN, ")", None, 1),
+                [Literal("aaa")],
             )
         ),
-        While(Literal(True), Block(
-            [Expression(Literal(1)), Expression(Literal(1))])),
+        While(Literal(True), Block([Expression(Literal(1)), Expression(Literal(1))])),
+        Function(
+            Token(TT.IDENTIFIER, "func1", None, 1),
+            [Token(TT.IDENTIFIER, "p1", None, 1), Token(TT.IDENTIFIER, "p2", None, 1)],
+            [
+                Print(
+                    Binary(
+                        Unary(Token(TT.MINUS, "-", None, 1), Literal(123)),
+                        Token(TT.STAR, "*", None, 1),
+                        Grouping(Variable(Token(TT.IDENTIFIER, "p1", None, 1))),
+                    )
+                ),
+                Return(Token(TT.RETURN, "return", None, 1), Literal(1)),
+            ],
+        ),
     ]
 
     print(*AstPrinter().print(statements), sep="\n")

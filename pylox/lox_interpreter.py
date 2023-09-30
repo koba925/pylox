@@ -15,10 +15,23 @@ from lox_expr import (
     Variable,
 )
 from lox_runtime_error import LoxRuntimeError
-from lox_stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var, While
+from lox_stmt import (
+    Block,
+    Expression,
+    Function,
+    If,
+    Print,
+    Return,
+    Stmt,
+    StmtVisitor,
+    Var,
+    While,
+)
 from lox_token import Token
 from lox_token import TokenType as TT
-from lox_callable import LoxCallable  # , Clock
+from lox_callable import LoxCallable, Clock
+from lox_function import LoxFunction
+from lox_return import ReturnException
 
 # TODO: use operator module
 
@@ -28,7 +41,7 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
         self.globals = Environment()
         self.__environment = self.globals
 
-        # globals.define("clock", Clock)
+        self.globals.define("clock", Clock())
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -43,7 +56,7 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def __execute(self, stmt: Stmt) -> None:
         stmt.accept(self)
 
-    def __execute_block(self, statements: list[Stmt], environment: Environment) -> None:
+    def execute_block(self, statements: list[Stmt], environment: Environment) -> None:
         previous = self.__environment
 
         try:
@@ -55,11 +68,16 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
             self.__environment = previous
 
     def visit_block_stmt(self, stmt: Block) -> None:
-        self.__execute_block(stmt.statements, Environment(self.__environment))
+        self.execute_block(stmt.statements, Environment(self.__environment))
         return None
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.__evaluate(stmt.expression)
+
+    def visit_function_stmt(self, stmt: "Function") -> None:
+        function = LoxFunction(stmt, self.__environment)
+        self.__environment.define(stmt.name.lexeme, function)
+        return None
 
     def visit_if_stmt(self, stmt: If) -> None:
         if self.__is_truthy(self.__evaluate(stmt.condition)):
@@ -70,6 +88,13 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def visit_print_stmt(self, stmt: Print) -> None:
         value = self.__evaluate(stmt.expression)
         print(self.__stringify(value))
+
+    def visit_return_stmt(self, stmt: Return) -> None:
+        value = None
+        if stmt.value is not None:
+            value = self.__evaluate(stmt.value)
+
+        raise ReturnException(value)
 
     def visit_var_stmt(self, stmt: Var) -> None:
         value = None
@@ -138,10 +163,10 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
             arguments.append(self.__evaluate(argument))
 
         if not isinstance(callee, LoxCallable):
-            raise RuntimeError(expr.paren, "Can only call functions and classes.")
+            raise LoxRuntimeError(expr.paren, "Can only call functions and classes.")
 
         if len(arguments) != callee.arity():
-            raise RuntimeError(
+            raise LoxRuntimeError(
                 expr.paren,
                 f"Expected {callee.arity()} arguments but got {len(arguments)}.",
             )

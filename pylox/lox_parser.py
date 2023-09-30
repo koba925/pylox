@@ -12,7 +12,7 @@ from lox_expr import (
     Unary,
     Variable,
 )
-from lox_stmt import Block, Expression, If, Print, Stmt, Var, While
+from lox_stmt import Block, Expression, Function, If, Print, Return, Stmt, Var, While
 from lox_token import Token
 from lox_token import TokenType as TT
 
@@ -36,6 +36,8 @@ class Parser:
 
     def __declaration(self) -> Optional[Stmt]:
         try:
+            if self.__match(TT.FUN):
+                return self.__function("function")
             if self.__match(TT.VAR):
                 return self.__var_declaration()
 
@@ -51,6 +53,8 @@ class Parser:
             return self.__if_statement()
         if self.__match(TT.PRINT):
             return self.__print_statement()
+        if self.__match(TT.RETURN):
+            return self.__return_statement()
         if self.__match(TT.WHILE):
             return self.__while_statement()
         if self.__match(TT.LEFT_BRACE):
@@ -106,6 +110,15 @@ class Parser:
         self.__consume(TT.SEMICOLON, "Expect ';' after value.")
         return Print(value)
 
+    def __return_statement(self) -> Stmt:
+        keyword = self.__previous()
+        value = None
+        if not self.__check(TT.SEMICOLON):
+            value = self.__expression()
+
+        self.__consume(TT.SEMICOLON, "Expect ';' after return value.")
+        return Return(keyword, value)
+
     def __var_declaration(self) -> Stmt:
         name = self.__consume(TT.IDENTIFIER, "Expect variable name.")
 
@@ -128,6 +141,26 @@ class Parser:
         expr = self.__expression()
         self.__consume(TT.SEMICOLON, "Expect ';' after expression.")
         return Expression(expr)
+
+    def __function(self, kind: str) -> Function:
+        name = self.__consume(TT.IDENTIFIER, "Expect " + kind + " name.")
+        self.__consume(TT.LEFT_PAREN, "Expect '(' after " + kind + " name.")
+        parameters: list[Token] = []
+        if not self.__check(TT.RIGHT_PAREN):
+            while True:
+                if len(parameters) >= 255:
+                    self.__error(self.__peek(), "Can't have more than 255 prameters.")
+
+                parameters.append(
+                    self.__consume(TT.IDENTIFIER, "Expect parameter name.")
+                )
+                if not self.__match(TT.COMMA):
+                    break
+        self.__consume(TT.RIGHT_PAREN, "Expect ')' after parameters.")
+
+        self.__consume(TT.LEFT_BRACE, "Expect '{' before " + kind + " body.")
+        body = self.__block()
+        return Function(name, parameters, body)
 
     def __block(self) -> list[Stmt]:
         statements: list[Stmt] = []

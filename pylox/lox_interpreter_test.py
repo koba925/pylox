@@ -334,32 +334,221 @@ global c""",
         True,
     ),
     (
-        "print clock();",
+        "print clock(1);",
         "",
-        "Can only call functions and classes.\n[line 1]",
+        "Expected 0 arguments but got 1.\n[line 1]",
         False,
         True,
     ),
-    # (
-    #     """\
-    #     fun isOdd(n) {
-    #         if (n == 0) return false;
-    #         return isEven(n - 1);
-    #     }
-    #     fun isEven(n) {
-    #         if (n == 0) return true;
-    #         return isOdd(n - 1);
-    #     }
-    #     print isOdd(2);
-    #     print isOdd(3);
-    #     print isEven(2);
-    #     print isEven(3);
-    #     """,
-    #     "",
-    #     "",
-    #     False,
-    #     False,
-    # ),
+    (
+        """
+        fun add(a, b, c) {
+            print a + b + c;
+        }
+
+        add(1, 2, 3);
+        """,
+        "6",
+        "",
+        False,
+        False,
+    ),
+    (
+        """
+        fun count(n) {
+            if (n > 1) count(n - 1);
+            print n;
+        }
+
+        count(3);
+        """,
+        "1\n2\n3",
+        "",
+        False,
+        False,
+    ),
+    (
+        """
+        fun add(a, b) {
+            print a + b;
+        }
+
+        print add;
+        """,
+        "<fn add>",
+        "",
+        False,
+        False,
+    ),
+    (
+        """
+        fun sayHi(first, last) {
+            print "Hi, " + first + " " + last + "!";
+        }
+
+        sayHi("Dear", "Reader");
+        """,
+        "Hi, Dear Reader!",
+        "",
+        False,
+        False,
+    ),
+    (
+        """
+        fun procedure() {
+            print "don't return anything";
+        }
+
+        var result = procedure();
+        print result;
+        """,
+        "don't return anything\nnil",
+        "",
+        False,
+        False,
+    ),
+    (
+        """
+        fun count(n) {
+            while (n < 100) {
+                if (n == 3) return n; // <--
+                print n;
+                n = n + 1;
+            }
+        }
+
+        count(1);
+        """,
+        "1\n2",
+        "",
+        False,
+        False,
+    ),
+    (
+        """
+        fun fib(n) {
+            if (n <= 1) return n;
+            return fib(n - 2) + fib(n - 1);
+        }
+
+        for (var i = 0; i < 6; i = i + 1) {
+            print fib(i);
+        }
+        """,
+        "0\n1\n1\n2\n3\n5",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        fun isOdd(n) {
+            if (n == 0) return false;
+            return isEven(n - 1);
+        }
+        fun isEven(n) {
+            if (n == 0) return true;
+            return isOdd(n - 1);
+        }
+        print isOdd(2);
+        print isOdd(3);
+        print isEven(2);
+        print isEven(3);
+        """,
+        "false\ntrue\ntrue\nfalse",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        fun makeCounter() {
+            var i = 0;
+            fun count() {
+                i = i + 1;
+                print i;
+            }
+
+            return count;
+        }
+
+        var counter = makeCounter();
+        counter(); // "1".
+        counter(); // "2".
+        """,
+        "1\n2",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        var a = "outer";
+        {
+            var a = "inner";
+            print a;
+        }
+        """,
+        "inner",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        var a = "outer";
+        {
+            print a;
+            var a = "inner";
+        }
+        """,
+        "outer",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        var a = "global";
+        {
+            fun showA() {
+                print a;
+            }
+
+        showA();
+        var a = "block";
+        showA();
+        }
+        """,
+        "global\nglobal",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        """,
+        "",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        """,
+        "",
+        "",
+        False,
+        False,
+    ),
+    (
+        """\
+        """,
+        "",
+        "",
+        False,
+        False,
+    ),
     # (
     #     """\
     #     class Saxophone {
@@ -411,3 +600,24 @@ def test_statements(
     assert err.strip().startswith(err_expected)
     assert LoxError.had_error is had_error
     assert LoxError.had_runtime_error is had_runtime_error
+
+
+import re
+
+
+def test_clock(
+    capfd: pytest.CaptureFixture[str],
+) -> None:
+    tokens = Scanner("print clock();").scanTokens()
+    assert LoxError.had_error is False
+    stmts = Parser(tokens).parse()
+    assert LoxError.had_error is False
+    assert all(stmt is not None for stmt in stmts)
+    Interpreter().interpret(stmts)
+
+    out, err = capfd.readouterr()
+    print(f"out, err = '{out}', '{err}'")
+    assert re.match(r"\d+.\d+", out.strip()) is not None
+    assert err.strip() == ""
+    assert LoxError.had_error is False
+    assert LoxError.had_runtime_error is False
