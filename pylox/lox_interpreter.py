@@ -38,10 +38,11 @@ from lox_return import ReturnException
 
 class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def __init__(self) -> None:
-        self.globals = Environment()
-        self.__environment = self.globals
+        self.__globals = Environment()
+        self.__environment = self.__globals
+        self.__locals: dict[Expr, int] = {}
 
-        self.globals.define("clock", Clock())
+        self.__globals.define("clock", Clock())
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -56,6 +57,9 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def __execute(self, stmt: Stmt) -> None:
         stmt.accept(self)
 
+    def resolve(self, expr: Expr, depth: int) -> None:
+        self.__locals[expr] = depth
+
     def execute_block(self, statements: list[Stmt], environment: Environment) -> None:
         previous = self.__environment
 
@@ -69,7 +73,6 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.execute_block(stmt.statements, Environment(self.__environment))
-        return None
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.__evaluate(stmt.expression)
@@ -77,7 +80,6 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
     def visit_function_stmt(self, stmt: "Function") -> None:
         function = LoxFunction(stmt, self.__environment)
         self.__environment.define(stmt.name.lexeme, function)
-        return None
 
     def visit_if_stmt(self, stmt: If) -> None:
         if self.__is_truthy(self.__evaluate(stmt.condition)):
@@ -109,7 +111,11 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
     def visit_assign_expr(self, expr: Assign) -> Any:
         value = self.__evaluate(expr.value)
-        self.__environment.assign(expr.name, value)
+        if expr in self.__locals:
+            distance = self.__locals[expr]
+            self.__environment.assign_at(distance, expr.name, value)
+        else:
+            self.__globals.assign(expr.name, value)
         return value
 
     def visit_binary_expr(self, expr: Binary) -> Any:
@@ -204,7 +210,13 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
         return None
 
     def visit_variable_expr(self, expr: Variable) -> Any:
-        return self.__environment.get(expr.name)
+        return self.__lookup_variable(expr.name, expr)
+
+    def __lookup_variable(self, name: Token, expr: Expr) -> Any:
+        if expr in self.__locals:
+            return self.__environment.get_at(self.__locals[expr], name.lexeme)
+        else:
+            return self.__globals.get(name)
 
     def __check_number_operand(self, operator: Token, operand: Any) -> None:
         if isinstance(operand, float):

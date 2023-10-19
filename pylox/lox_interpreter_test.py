@@ -2,8 +2,9 @@ from typing import Generator
 
 import pytest
 from lox_error import LoxError
-from lox_interpreter import Interpreter
 from lox_parser import Parser
+from lox_resolver import Resolver
+from lox_interpreter import Interpreter
 from lox_scanner import Scanner
 
 
@@ -515,9 +516,9 @@ global c""",
                 print a;
             }
 
-        showA();
-        var a = "block";
-        showA();
+            showA();
+            var a = "block";
+            showA();
         }
         """,
         "global\nglobal",
@@ -527,18 +528,23 @@ global c""",
     ),
     (
         """\
+        fun bad() {
+            var a = "first";
+            var a = "second";
+        }
         """,
         "",
-        "",
-        False,
+        "[line 3] Error at 'a': Already a variable with this name in this scope.",
+        True,
         False,
     ),
     (
         """\
+        return "at top level";
         """,
         "",
-        "",
-        False,
+        "[line 1] Error at 'return': Can't return from top-level code.",
+        True,
         False,
     ),
     (
@@ -589,10 +595,16 @@ def test_statements(
     tokens = Scanner(source).scanTokens()
     assert LoxError.had_error is False
     stmts = Parser(tokens).parse()
-    assert LoxError.had_error is had_error
-    if not had_error:
-        assert all(stmt is not None for stmt in stmts)
-        Interpreter().interpret(stmts)
+    if LoxError.had_error:
+        assert had_error
+    if not LoxError.had_error:
+        interpreter = Interpreter()
+        resolver = Resolver(interpreter)
+        resolver.resolve_statements(stmts)
+        assert LoxError.had_error == had_error
+        if not LoxError.had_error:
+            assert all(stmt is not None for stmt in stmts)
+            interpreter.interpret(stmts)
 
     out, err = capfd.readouterr()
     print(f"out, err = '{out}', '{err}'")

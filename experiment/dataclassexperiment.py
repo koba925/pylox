@@ -21,12 +21,10 @@ class ContainerWrapper:
 
     def append(self, s: Struct) -> None:
         self.container.content.append(s)
-        return None
 
     def store_structs(self, s_list: List[Struct]) -> None:
         for s in s_list:
             self.append(s)
-        return None
 
 
 struct_list = [Struct("foo")]

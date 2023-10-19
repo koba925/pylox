@@ -7,6 +7,7 @@ from lox_error import LoxError
 from lox_interpreter import Interpreter
 from lox_parser import Parser
 from lox_scanner import Scanner
+from lox_resolver import Resolver
 
 # from lox_ast_printer import AstPrinter
 
@@ -25,6 +26,11 @@ class Lox:
         statements = parser.parse()
 
         # Stop if there was a syntax error.
+        if LoxError.had_error:
+            return
+
+        resolver = Resolver(Lox.interpreter)
+        resolver.resolve_statements(statements)
         if LoxError.had_error:
             return
 

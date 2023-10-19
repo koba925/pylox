@@ -31,3 +31,17 @@ class Environment:
 
     def define(self, name: str, value: Any) -> None:
         self.__values[name] = value
+
+    def get_at(self, distance: int, name: str) -> Any:
+        return self.__ancestor(distance).__values[name]
+
+    def assign_at(self, distance: int, name: Token, value: Any) -> None:
+        self.__ancestor(distance).__values[name.lexeme] = value
+
+    def __ancestor(self, distance: int) -> "Environment":
+        environment = self
+        for _ in range(distance):
+            assert environment.__enclosing is not None
+            environment = environment.__enclosing
+
+        return environment

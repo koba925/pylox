@@ -55,6 +55,12 @@ class Assign(Expr):
     def accept(self, visitor: ExprVisitor[R]) -> R:
         return visitor.visit_assign_expr(self)
 
+    def __hash__(self) -> int:
+        return id(self)
+
+    def __eq__(self, other: object):
+        return self.__hash__() == other.__hash__()
+
 
 @dataclass
 class Binary(Expr):
@@ -117,3 +123,9 @@ class Variable(Expr):
 
     def accept(self, visitor: ExprVisitor[R]) -> R:
         return visitor.visit_variable_expr(self)
+
+    def __hash__(self) -> int:
+        return id(self)
+
+    def __eq__(self, other: object):
+        return self.__hash__() == other.__hash__()
