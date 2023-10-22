@@ -1,8 +1,7 @@
 import sys
 
 from lox_runtime_error import LoxRuntimeError
-from lox_token import Token
-from lox_token import TokenType as TT
+from lox_token import Token, TokenType as TT
 
 
 class LoxError:

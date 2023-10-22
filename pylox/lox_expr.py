@@ -7,7 +7,7 @@ from lox_token import Token
 R = TypeVar("R")
 
 
-class ExprVisitor(ABC, Generic[R]):
+class Visitor(ABC, Generic[R]):
     @abstractmethod
     def visit_assign_expr(self, expr: "Assign") -> R:
         raise NotImplementedError()
@@ -43,7 +43,7 @@ class ExprVisitor(ABC, Generic[R]):
 
 class Expr:
     @abstractmethod
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         raise NotImplementedError()
 
 
@@ -52,7 +52,7 @@ class Assign(Expr):
     name: Token
     value: Expr
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_assign_expr(self)
 
     def __hash__(self) -> int:
@@ -68,7 +68,7 @@ class Binary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_binary_expr(self)
 
 
@@ -78,7 +78,7 @@ class Call(Expr):
     paren: Token
     arguments: list[Expr]
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_call_expr(self)
 
 
@@ -86,7 +86,7 @@ class Call(Expr):
 class Grouping(Expr):
     expression: Expr
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_grouping_expr(self)
 
 
@@ -94,7 +94,7 @@ class Grouping(Expr):
 class Literal(Expr):
     value: Any
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_literal_expr(self)
 
 
@@ -104,7 +104,7 @@ class Logical(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_logical_expr(self)
 
 
@@ -113,7 +113,7 @@ class Unary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_unary_expr(self)
 
 
@@ -121,7 +121,7 @@ class Unary(Expr):
 class Variable(Expr):
     name: Token
 
-    def accept(self, visitor: ExprVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_variable_expr(self)
 
     def __hash__(self) -> int:

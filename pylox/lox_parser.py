@@ -1,20 +1,9 @@
 from typing import Optional
 
 from lox_error import LoxError
-from lox_expr import (
-    Assign,
-    Binary,
-    Call,
-    Expr,
-    Grouping,
-    Literal,
-    Logical,
-    Unary,
-    Variable,
-)
-from lox_stmt import Block, Expression, Function, If, Print, Return, Stmt, Var, While
-from lox_token import Token
-from lox_token import TokenType as TT
+from lox_token import Token, TokenType as TT
+import lox_expr as EXPR
+import lox_stmt as STMT
 
 
 class ParseError(Exception):
@@ -26,15 +15,15 @@ class Parser:
         self.__tokens = tokens
         self.__current = 0
 
-    def parse(self) -> list[Stmt]:
-        statements: list[Stmt] = []
+    def parse(self) -> list[STMT.Stmt]:
+        statements: list[STMT.Stmt] = []
         while not self.__is_at_end():
             statement = self.__declaration()
             if statement is not None:
                 statements.append(statement)
         return statements
 
-    def __declaration(self) -> Optional[Stmt]:
+    def __declaration(self) -> Optional[STMT.Stmt]:
         try:
             if self.__match(TT.FUN):
                 return self.__function("function")
@@ -46,7 +35,7 @@ class Parser:
             self.__syncronize()
             return None
 
-    def __statement(self) -> Stmt:
+    def __statement(self) -> STMT.Stmt:
         if self.__match(TT.FOR):
             return self.__for_statement()
         if self.__match(TT.IF):
@@ -58,14 +47,14 @@ class Parser:
         if self.__match(TT.WHILE):
             return self.__while_statement()
         if self.__match(TT.LEFT_BRACE):
-            return Block(self.__block())
+            return STMT.Block(self.__block())
 
         return self.__expression_statement()
 
-    def __for_statement(self) -> Stmt:
+    def __for_statement(self) -> STMT.Stmt:
         self.__consume(TT.LEFT_PAREN, "Expect '(' after 'for'.")
 
-        initializer: Optional[Stmt] = (
+        initializer: Optional[STMT.Stmt] = (
             None
             if self.__match(TT.SEMICOLON)
             else self.__var_declaration()
@@ -82,18 +71,18 @@ class Parser:
         body = self.__statement()
 
         if increment is not None:
-            body = Block([body, Expression(increment)])
+            body = STMT.Block([body, STMT.Expression(increment)])
 
         if condition is None:
-            condition = Literal(True)
-        body = While(condition, body)
+            condition = EXPR.Literal(True)
+        body = STMT.While(condition, body)
 
         if initializer is not None:
-            body = Block([initializer, body])
+            body = STMT.Block([initializer, body])
 
         return body
 
-    def __if_statement(self) -> Stmt:
+    def __if_statement(self) -> STMT.Stmt:
         self.__consume(TT.LEFT_PAREN, "Expect '(' after 'if'.")
         condition = self.__expression()
         self.__consume(TT.RIGHT_PAREN, "Expect ')' after if condition.")
@@ -103,23 +92,23 @@ class Parser:
         if self.__match(TT.ELSE):
             else_branch = self.__statement()
 
-        return If(condition, then_branch, else_branch)
+        return STMT.If(condition, then_branch, else_branch)
 
-    def __print_statement(self) -> Stmt:
+    def __print_statement(self) -> STMT.Stmt:
         value = self.__expression()
         self.__consume(TT.SEMICOLON, "Expect ';' after value.")
-        return Print(value)
+        return STMT.Print(value)
 
-    def __return_statement(self) -> Stmt:
+    def __return_statement(self) -> STMT.Stmt:
         keyword = self.__previous()
         value = None
         if not self.__check(TT.SEMICOLON):
             value = self.__expression()
 
         self.__consume(TT.SEMICOLON, "Expect ';' after return value.")
-        return Return(keyword, value)
+        return STMT.Return(keyword, value)
 
-    def __var_declaration(self) -> Stmt:
+    def __var_declaration(self) -> STMT.Stmt:
         name = self.__consume(TT.IDENTIFIER, "Expect variable name.")
 
         initializer = None
@@ -127,22 +116,22 @@ class Parser:
             initializer = self.__expression()
 
         self.__consume(TT.SEMICOLON, "Expect ';' after variable declaration.")
-        return Var(name, initializer)
+        return STMT.Var(name, initializer)
 
-    def __while_statement(self) -> Stmt:
+    def __while_statement(self) -> STMT.Stmt:
         self.__consume(TT.LEFT_PAREN, "Expect '(' after 'while'.")
         condition = self.__expression()
         self.__consume(TT.RIGHT_PAREN, "Expect ')' after condition.")
         body = self.__statement()
 
-        return While(condition, body)
+        return STMT.While(condition, body)
 
-    def __expression_statement(self) -> Stmt:
+    def __expression_statement(self) -> STMT.Stmt:
         expr = self.__expression()
         self.__consume(TT.SEMICOLON, "Expect ';' after expression.")
-        return Expression(expr)
+        return STMT.Expression(expr)
 
-    def __function(self, kind: str) -> Function:
+    def __function(self, kind: str) -> STMT.Function:
         name = self.__consume(TT.IDENTIFIER, "Expect " + kind + " name.")
         self.__consume(TT.LEFT_PAREN, "Expect '(' after " + kind + " name.")
         parameters: list[Token] = []
@@ -160,10 +149,10 @@ class Parser:
 
         self.__consume(TT.LEFT_BRACE, "Expect '{' before " + kind + " body.")
         body = self.__block()
-        return Function(name, parameters, body)
+        return STMT.Function(name, parameters, body)
 
-    def __block(self) -> list[Stmt]:
-        statements: list[Stmt] = []
+    def __block(self) -> list[STMT.Stmt]:
+        statements: list[STMT.Stmt] = []
 
         while not self.__check(TT.RIGHT_BRACE) and not self.__is_at_end():
             statement = self.__declaration()
@@ -173,55 +162,55 @@ class Parser:
         self.__consume(TT.RIGHT_BRACE, "Expect '}' after block.")
         return statements
 
-    def __expression(self) -> Expr:
+    def __expression(self) -> EXPR.Expr:
         return self.__assignment()
 
-    def __assignment(self) -> Expr:
+    def __assignment(self) -> EXPR.Expr:
         expr = self.__or()
 
         if self.__match(TT.EQUAL):
             equals = self.__previous()
             value = self.__assignment()
 
-            if isinstance(expr, Variable):
+            if isinstance(expr, EXPR.Variable):
                 name = expr.name
-                return Assign(name, value)
+                return EXPR.Assign(name, value)
 
             self.__error(equals, "Invalid assignment target.")
 
         return expr
 
-    def __or(self) -> Expr:
+    def __or(self) -> EXPR.Expr:
         expr = self.__and()
 
         while self.__match(TT.OR):
             operator = self.__previous()
             right = self.__and()
-            expr = Logical(expr, operator, right)
+            expr = EXPR.Logical(expr, operator, right)
 
         return expr
 
-    def __and(self) -> Expr:
+    def __and(self) -> EXPR.Expr:
         expr = self.__equality()
 
         while self.__match(TT.AND):
             operator = self.__previous()
             right = self.__equality()
-            expr = Logical(expr, operator, right)
+            expr = EXPR.Logical(expr, operator, right)
 
         return expr
 
-    def __equality(self) -> Expr:
+    def __equality(self) -> EXPR.Expr:
         expr = self.__comparison()
 
         while self.__match(TT.BANG_EQUAL, TT.EQUAL_EQUAL):
             operator = self.__previous()
             right = self.__comparison()
-            expr = Binary(expr, operator, right)
+            expr = EXPR.Binary(expr, operator, right)
 
         return expr
 
-    def __comparison(self) -> Expr:
+    def __comparison(self) -> EXPR.Expr:
         expr = self.__term()
 
         while self.__match(
@@ -232,40 +221,40 @@ class Parser:
         ):
             operator = self.__previous()
             right = self.__term()
-            expr = Binary(expr, operator, right)
+            expr = EXPR.Binary(expr, operator, right)
 
         return expr
 
-    def __term(self) -> Expr:
+    def __term(self) -> EXPR.Expr:
         expr = self.__factor()
 
         while self.__match(TT.MINUS, TT.PLUS):
             operator = self.__previous()
             right = self.__factor()
-            expr = Binary(expr, operator, right)
+            expr = EXPR.Binary(expr, operator, right)
 
         return expr
 
-    def __factor(self) -> Expr:
+    def __factor(self) -> EXPR.Expr:
         expr = self.__unary()
 
         while self.__match(TT.SLASH, TT.STAR):
             operator = self.__previous()
             right = self.__unary()
-            expr = Binary(expr, operator, right)
+            expr = EXPR.Binary(expr, operator, right)
 
         return expr
 
-    def __unary(self) -> Expr:
+    def __unary(self) -> EXPR.Expr:
         if self.__match(TT.BANG, TT.MINUS):
             operator = self.__previous()
             right = self.__unary()
-            return Unary(operator, right)
+            return EXPR.Unary(operator, right)
 
         return self.__call()
 
-    def __finish_call(self, callee: Expr) -> Expr:
-        arguments: list[Expr] = []
+    def __finish_call(self, callee: EXPR.Expr) -> EXPR.Expr:
+        arguments: list[EXPR.Expr] = []
         if not self.__check(TT.RIGHT_PAREN):
             while True:
                 if len(arguments) >= 255:
@@ -275,9 +264,9 @@ class Parser:
                     break
 
         paren = self.__consume(TT.RIGHT_PAREN, "Expect ')' after arguments")
-        return Call(callee, paren, arguments)
+        return EXPR.Call(callee, paren, arguments)
 
-    def __call(self) -> Expr:
+    def __call(self) -> EXPR.Expr:
         expr = self.__primary()
 
         while True:
@@ -288,24 +277,24 @@ class Parser:
 
         return expr
 
-    def __primary(self) -> Expr:
+    def __primary(self) -> EXPR.Expr:
         if self.__match(TT.FALSE):
-            return Literal(False)
+            return EXPR.Literal(False)
         if self.__match(TT.TRUE):
-            return Literal(True)
+            return EXPR.Literal(True)
         if self.__match(TT.NIL):
-            return Literal(None)
+            return EXPR.Literal(None)
 
         if self.__match(TT.NUMBER, TT.STRING):
-            return Literal(self.__previous().literal)
+            return EXPR.Literal(self.__previous().literal)
 
         if self.__match(TT.IDENTIFIER):
-            return Variable(self.__previous())
+            return EXPR.Variable(self.__previous())
 
         if self.__match(TT.LEFT_PAREN):
             expr = self.__expression()
             self.__consume(TT.RIGHT_PAREN, "Expect ')' after expression.")
-            return Grouping(expr)
+            return EXPR.Grouping(expr)
 
         raise self.__error(self.__peek(), "Expect expression.")
 

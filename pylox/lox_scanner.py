@@ -1,8 +1,7 @@
 from typing import Any
 
 from lox_error import LoxError
-from lox_token import Token
-from lox_token import TokenType as TT
+from lox_token import Token, TokenType as TT
 
 
 class Scanner:

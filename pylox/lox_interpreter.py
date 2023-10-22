@@ -1,34 +1,11 @@
 from typing import Any
 
-from lox_environment import Environment
 from lox_error import LoxError
-from lox_expr import (
-    Assign,
-    Binary,
-    Call,
-    Expr,
-    ExprVisitor,
-    Grouping,
-    Literal,
-    Logical,
-    Unary,
-    Variable,
-)
 from lox_runtime_error import LoxRuntimeError
-from lox_stmt import (
-    Block,
-    Expression,
-    Function,
-    If,
-    Print,
-    Return,
-    Stmt,
-    StmtVisitor,
-    Var,
-    While,
-)
-from lox_token import Token
-from lox_token import TokenType as TT
+from lox_token import Token, TokenType as TT
+import lox_expr as EXPR
+import lox_stmt as STMT
+from lox_environment import Environment
 from lox_callable import LoxCallable, Clock
 from lox_function import LoxFunction
 from lox_return import ReturnException
@@ -36,31 +13,31 @@ from lox_return import ReturnException
 # TODO: use operator module
 
 
-class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
+class Interpreter(EXPR.Visitor[Any], STMT.Visitor[None]):
     def __init__(self) -> None:
         self.__globals = Environment()
         self.__environment = self.__globals
-        self.__locals: dict[Expr, int] = {}
+        self.__locals: dict[EXPR.Expr, int] = {}
 
         self.__globals.define("clock", Clock())
 
-    def interpret(self, statements: list[Stmt]) -> None:
+    def interpret(self, statements: list[STMT.Stmt]) -> None:
         try:
             for statement in statements:
                 self.__execute(statement)
         except LoxRuntimeError as e:
             LoxError.runtime_error(e)
 
-    def __evaluate(self, expr: Expr) -> Any:
+    def __evaluate(self, expr: EXPR.Expr) -> Any:
         return expr.accept(self)
 
-    def __execute(self, stmt: Stmt) -> None:
+    def __execute(self, stmt: STMT.Stmt) -> None:
         stmt.accept(self)
 
-    def resolve(self, expr: Expr, depth: int) -> None:
+    def resolve(self, expr: EXPR.Expr, depth: int) -> None:
         self.__locals[expr] = depth
 
-    def execute_block(self, statements: list[Stmt], environment: Environment) -> None:
+    def execute_block(self, statements: list[STMT.Stmt], environment: Environment) -> None:
         previous = self.__environment
 
         try:
@@ -71,45 +48,45 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
         finally:
             self.__environment = previous
 
-    def visit_block_stmt(self, stmt: Block) -> None:
+    def visit_block_stmt(self, stmt: STMT.Block) -> None:
         self.execute_block(stmt.statements, Environment(self.__environment))
 
-    def visit_expression_stmt(self, stmt: Expression) -> None:
+    def visit_expression_stmt(self, stmt: STMT.Expression) -> None:
         self.__evaluate(stmt.expression)
 
-    def visit_function_stmt(self, stmt: "Function") -> None:
+    def visit_function_stmt(self, stmt: "STMT.Function") -> None:
         function = LoxFunction(stmt, self.__environment)
         self.__environment.define(stmt.name.lexeme, function)
 
-    def visit_if_stmt(self, stmt: If) -> None:
+    def visit_if_stmt(self, stmt: STMT.If) -> None:
         if self.__is_truthy(self.__evaluate(stmt.condition)):
             self.__execute(stmt.then_branch)
         elif stmt.else_branch is not None:
             self.__execute(stmt.else_branch)
 
-    def visit_print_stmt(self, stmt: Print) -> None:
+    def visit_print_stmt(self, stmt: STMT.Print) -> None:
         value = self.__evaluate(stmt.expression)
         print(self.__stringify(value))
 
-    def visit_return_stmt(self, stmt: Return) -> None:
+    def visit_return_stmt(self, stmt: STMT.Return) -> None:
         value = None
         if stmt.value is not None:
             value = self.__evaluate(stmt.value)
 
         raise ReturnException(value)
 
-    def visit_var_stmt(self, stmt: Var) -> None:
+    def visit_var_stmt(self, stmt: STMT.Var) -> None:
         value = None
         if stmt.initializer is not None:
             value = self.__evaluate(stmt.initializer)
 
         self.__environment.define(stmt.name.lexeme, value)
 
-    def visit_while_stmt(self, stmt: While) -> None:
+    def visit_while_stmt(self, stmt: STMT.While) -> None:
         while self.__is_truthy(self.__evaluate(stmt.condition)):
             self.__execute(stmt.body)
 
-    def visit_assign_expr(self, expr: Assign) -> Any:
+    def visit_assign_expr(self, expr: EXPR.Assign) -> Any:
         value = self.__evaluate(expr.value)
         if expr in self.__locals:
             distance = self.__locals[expr]
@@ -118,7 +95,7 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
             self.__globals.assign(expr.name, value)
         return value
 
-    def visit_binary_expr(self, expr: Binary) -> Any:
+    def visit_binary_expr(self, expr: EXPR.Binary) -> Any:
         left = self.__evaluate(expr.left)
         right = self.__evaluate(expr.right)
 
@@ -161,7 +138,7 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
         # Unreachable.
         return None
 
-    def visit_call_expr(self, expr: Call) -> Any:
+    def visit_call_expr(self, expr: EXPR.Call) -> Any:
         callee = self.__evaluate(expr.callee)
 
         arguments: list[Any] = []
@@ -179,13 +156,13 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
         return callee.call(self, arguments)
 
-    def visit_grouping_expr(self, expr: Grouping) -> Any:
+    def visit_grouping_expr(self, expr: EXPR.Grouping) -> Any:
         return self.__evaluate(expr.expression)
 
-    def visit_literal_expr(self, expr: Literal) -> Any:
+    def visit_literal_expr(self, expr: EXPR.Literal) -> Any:
         return expr.value
 
-    def visit_logical_expr(self, expr: Logical) -> Any:
+    def visit_logical_expr(self, expr: EXPR.Logical) -> Any:
         left = self.__evaluate(expr.left)
 
         if expr.operator.token_type == TT.OR:
@@ -197,7 +174,7 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
 
         return self.__evaluate(expr.right)
 
-    def visit_unary_expr(self, expr: Unary) -> Any:
+    def visit_unary_expr(self, expr: EXPR.Unary) -> Any:
         right = self.__evaluate(expr.right)
 
         if expr.operator.token_type == TT.BANG:
@@ -209,10 +186,10 @@ class Interpreter(ExprVisitor[Any], StmtVisitor[None]):
         # Unreachable.
         return None
 
-    def visit_variable_expr(self, expr: Variable) -> Any:
+    def visit_variable_expr(self, expr: EXPR.Variable) -> Any:
         return self.__lookup_variable(expr.name, expr)
 
-    def __lookup_variable(self, name: Token, expr: Expr) -> Any:
+    def __lookup_variable(self, name: Token, expr: EXPR.Expr) -> Any:
         if expr in self.__locals:
             return self.__environment.get_at(self.__locals[expr], name.lexeme)
         else:

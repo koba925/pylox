@@ -2,10 +2,10 @@ from typing import Generator
 
 import pytest
 from lox_error import LoxError
+from lox_scanner import Scanner
 from lox_parser import Parser
 from lox_resolver import Resolver
 from lox_interpreter import Interpreter
-from lox_scanner import Scanner
 
 
 @pytest.fixture(autouse=True)

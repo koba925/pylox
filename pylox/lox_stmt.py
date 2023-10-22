@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Generic, Optional, TypeVar
 
-from lox_expr import Expr
 from lox_token import Token
+from lox_expr import Expr
 
 R = TypeVar("R")
 
 
-class StmtVisitor(ABC, Generic[R]):
+class Visitor(ABC, Generic[R]):
     @abstractmethod
     def visit_block_stmt(self, stmt: "Block") -> R:
         raise NotImplementedError()
@@ -44,7 +44,7 @@ class StmtVisitor(ABC, Generic[R]):
 
 class Stmt:
     @abstractmethod
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         raise NotImplementedError()
 
 
@@ -52,7 +52,7 @@ class Stmt:
 class Block(Stmt):
     statements: list[Stmt]
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_block_stmt(self)
 
 
@@ -60,7 +60,7 @@ class Block(Stmt):
 class Expression(Stmt):
     expression: Expr
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_expression_stmt(self)
 
 
@@ -70,7 +70,7 @@ class Function(Stmt):
     params: list[Token]
     body: list[Stmt]
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_function_stmt(self)
 
 
@@ -80,7 +80,7 @@ class If(Stmt):
     then_branch: Stmt
     else_branch: Optional[Stmt]
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_if_stmt(self)
 
 
@@ -88,7 +88,7 @@ class If(Stmt):
 class Print(Stmt):
     expression: Expr
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_print_stmt(self)
 
 
@@ -97,7 +97,7 @@ class Return(Stmt):
     keyword: Token
     value: Optional[Expr]
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_return_stmt(self)
 
 
@@ -106,7 +106,7 @@ class Var(Stmt):
     name: Token
     initializer: Optional[Expr]
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_var_stmt(self)
 
 
@@ -115,5 +115,5 @@ class While(Stmt):
     condition: Expr
     body: Stmt
 
-    def accept(self, visitor: StmtVisitor[R]) -> R:
+    def accept(self, visitor: Visitor[R]) -> R:
         return visitor.visit_while_stmt(self)
